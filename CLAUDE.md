@@ -20,3 +20,11 @@ Lo schema viene modificato da più persone, da più dispositivi e da più sessio
 - Ogni tabella ha `rev`, per la sincronizzazione tra dispositivi (vedi README).
 - MVP con un'unica utenza master: una policy di accesso completo per tabella. Le policy per ruolo arrivano dopo.
 - Nel frontend il calendario ha tre viste: generale (mese, tutte le commesse), persona (settimana), planning (persone × giorni).
+
+## Linee guida UI del gestionale (dal 19 ottobre)
+Riviste con la skill ui-ux-pro-max (stile "Minimalism & Swiss", densità alta):
+- Un solo accento (blu), neutri slate, bordi al posto delle ombre, raggio 6px, ritmo a 8px, testo base 13px.
+- Un'unica famiglia (Plus Jakarta Sans) più un mono per codici e numeri (JetBrains Mono).
+- Sidebar a sinistra con icone SVG e etichette; su telefono diventa una barra in alto.
+- Titoli dei pannelli come etichette maiuscole piccole; niente sottotitoli esplicativi sotto i titoli delle viste; niente testi di aiuto sotto i form.
+- Stato sempre con testo oltre al colore. Stati vuoti in una riga.
