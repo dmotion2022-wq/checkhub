@@ -28,3 +28,4 @@ Riviste con la skill ui-ux-pro-max (stile "Minimalism & Swiss", densità alta):
 - Sidebar a sinistra con icone SVG e etichette; su telefono diventa una barra in alto.
 - Titoli dei pannelli come etichette maiuscole piccole; niente sottotitoli esplicativi sotto i titoli delle viste; niente testi di aiuto sotto i form.
 - Stato sempre con testo oltre al colore. Stati vuoti in una riga.
+- La scheda progetto è a moduli: intestazione (codice, titolo, preventivo) e un menu di schede. Overview (dati chiave, riassunto, team con volti grandi, numeri, attenzione, piano), Preventivo, Persone, Materiale e trasporti, Ordini, File, Sicurezza, To-Do. Una scheda compare solo se per quell'evento ha contenuto; Overview, Preventivo e Persone ci sono sempre.
