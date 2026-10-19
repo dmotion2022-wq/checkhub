@@ -65,7 +65,7 @@ La migrazione è stata verificata su un Postgres 16 vuoto. Si applica senza erro
 
 ## Ancora da fare
 
-- Policy RLS per ruolo, derivate dalla matrice dei permessi (tabella `permessi`).
+- Policy RLS per ruolo, derivate dalla matrice dei permessi (tabella `permessi`). Per ora si parte con **un'unica utenza master**: la migrazione crea per ogni tabella una policy che dà accesso completo agli utenti autenticati.
 - Trigger per riportare una voce a "da verificare" quando il valore validato cambia.
 - Tabelle dell'amministrazione (piano di fatturazione, documenti fornitore, pagamenti), rimandate.
 - Flussi leisure (Alpitour) e business travel.

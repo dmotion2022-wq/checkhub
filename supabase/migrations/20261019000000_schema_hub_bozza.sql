@@ -1,7 +1,7 @@
 -- Nakama Hub · schema database · BOZZA da validare (non applicare in produzione)
 -- Generato da gen_sql.py partendo da schema/core_v1.py, schema/anagrafiche_v1.py e schema/flussi_v1.py.
 -- Le chiavi esterne sono aggiunte alla fine, così l'ordine delle tabelle non conta.
--- RLS attiva su tutte le tabelle: le policy per ruolo (matrice PERMESSI, doc 07) sono ancora da scrivere.
+-- RLS attiva su tutte le tabelle. MVP: un'unica utenza master con accesso completo (policy in fondo al file).
 
 create extension if not exists pgcrypto;
 
@@ -3465,6 +3465,19 @@ create trigger preventivi_righe_rev before update on preventivi_righe for each r
 create trigger preventivi_righe_log after insert or update or delete on preventivi_righe for each row execute function hub_registra('riga_id');
 create trigger dispositivi_rev before update on dispositivi for each row execute function hub_prima_di_modifica('dispositivo_id');
 create trigger dispositivi_log after insert or update or delete on dispositivi for each row execute function hub_registra('dispositivo_id');
+
+-- ════════ ACCESSO: UTENZA MASTER (MVP) ════════
+-- Si parte con un'unica utenza master con accesso completo. Ogni utente autenticato di Supabase
+-- (nell'MVP: solo il master) legge e scrive tutto. Le policy per ruolo (tabella permessi) sostituiranno
+-- queste quando si attiveranno le utenze personali.
+do $$ declare t text; begin
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then
+    foreach t in array array['ruoli', 'aree', 'permessi', 'liste_valori', 'impostazioni', 'persone', 'persone_ruoli', 'competenze', 'indisponibilita', 'dati_riservati', 'organizzazioni', 'contatti', 'agenzie_clienti', 'accordi_partner', 'segnalazioni', 'contratti_quadro', 'commesse', 'brief', 'team', 'impegni', 'storico_stati', 'file', 'riassunti', 'proposte_ai', 'magazzini', 'articoli', 'pezzi', 'giacenze', 'prenotazioni', 'movimenti', 'listino', 'pacchetti', 'pacchetti_voci', 'costing', 'preventivi', 'fatture', 'rebate', 'ordini', 'ordini_righe', 'noleggi', 'trasporti', 'grafiche', 'sicurezza', 'timesheet', 'todo_clickup', 'location', 'spazi', 'spazi_capienze', 'hotel', 'camere_tipologie', 'tariffe_hotel', 'pacchetti_meeting', 'ristoranti', 'catering', 'menu', 'fornitori', 'fornitori_aree', 'offerte', 'accordi_fornitore', 'veicoli', 'tariffe_trasporto', 'esperienze', 'talent', 'dmc', 'persone_lingue', 'servizi_digitali', 'documenti', 'allegati', 'validazioni', 'richieste_censimento', 'piano_commessa', 'fasi', 'fabbisogni', 'alert_regole', 'alert', 'commessa_aree', 'richieste_offerta', 'rdo_fornitori', 'giri', 'tappe', 'logistica_persona', 'preventivi_righe', 'dispositivi', 'modifiche'] loop
+      execute format('create policy master_accesso_completo on %I for all to authenticated using (true) with check (true)', t);
+    end loop;
+  end if;
+end $$;
+
 
 do $$ begin
   if exists (select 1 from pg_publication where pubname = 'supabase_realtime') then

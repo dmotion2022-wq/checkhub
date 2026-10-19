@@ -18,3 +18,5 @@ Lo schema viene modificato da più persone, da più dispositivi e da più sessio
 - Location, hotel e ristoranti sono entità separate. Hanno in comune solo `spazi` e `spazi_capienze`.
 - Il calendario delle persone dipende da `fasi`, generate da `piano_commessa`.
 - Ogni tabella ha `rev`, per la sincronizzazione tra dispositivi (vedi README).
+- MVP con un'unica utenza master: una policy di accesso completo per tabella. Le policy per ruolo arrivano dopo.
+- Nel frontend il calendario ha tre viste: generale (mese, tutte le commesse), persona (settimana), planning (persone × giorni).

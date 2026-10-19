@@ -134,7 +134,7 @@ w = out.append
 w("-- Nakama Hub · schema database · BOZZA da validare (non applicare in produzione)")
 w("-- Generato da gen_sql.py partendo da schema/core_v1.py, schema/anagrafiche_v1.py e schema/flussi_v1.py.")
 w("-- Le chiavi esterne sono aggiunte alla fine, così l'ordine delle tabelle non conta.")
-w("-- RLS attiva su tutte le tabelle: le policy per ruolo (matrice PERMESSI, doc 07) sono ancora da scrivere.\n")
+w("-- RLS attiva su tutte le tabelle. MVP: un'unica utenza master con accesso completo (policy in fondo al file).\n")
 w("create extension if not exists pgcrypto;\n")
 fks = []
 order = [t for t in TABS.values() if t.kind == "core"] + [t for t in TABS.values() if t.kind == "anagrafiche"] + [t for t in TABS.values() if t.kind == "flussi"]
@@ -219,6 +219,19 @@ for T in order:
     pk = next(c["name"] for c in T.cols if c["pk"])
     w(f"create trigger {T.name}_rev before update on {T.name} for each row execute function hub_prima_di_modifica({q(pk)});")
     w(f"create trigger {T.name}_log after insert or update or delete on {T.name} for each row execute function hub_registra({q(pk)});")
+w("""
+-- ════════ ACCESSO: UTENZA MASTER (MVP) ════════
+-- Si parte con un'unica utenza master con accesso completo. Ogni utente autenticato di Supabase
+-- (nell'MVP: solo il master) legge e scrive tutto. Le policy per ruolo (tabella permessi) sostituiranno
+-- queste quando si attiveranno le utenze personali.
+do $$ declare t text; begin
+  if exists (select 1 from pg_roles where rolname = 'authenticated') then
+    foreach t in array array[""" + ", ".join(q(T.name) for T in order) + """] loop
+      execute format('create policy master_accesso_completo on %I for all to authenticated using (true) with check (true)', t);
+    end loop;
+  end if;
+end $$;
+""")
 w("""
 do $$ begin
   if exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
