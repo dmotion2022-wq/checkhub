@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Schema database Nakama Hub</title>
+<meta name="description" content="Tabelle, colonne e collegamenti del database del Nakama Hub (Supabase). Bozza da validare.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85,600;85,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: barra fissa con ricerca e filtro · indice a sinistra · una scheda per tabella con colonne, tipi e collegamenti */
+:root{
+  --bg:#F4F5F8; --surface:#FFFFFF; --surface-2:#EDEFF4; --fg:#161B26; --muted:#5B6475; --line:#DCE0E8;
+  --accent:#2F4BD6; --accent-weak:#E7EBFC; --core:#2F4BD6; --anag:#0C8A72; --flussi:#C2410C; --warn:#9A5800; --warn-bg:#FBEED6;
+  --f-display:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0F131B; --surface:#171C27; --surface-2:#1F2533; --fg:#E8EBF1; --muted:#9BA4B6; --line:#2C3344;
+  --accent:#8196FF; --accent-weak:#232B4D; --core:#8196FF; --anag:#4FD1B4; --flussi:#FB8B5B; --warn:#F0B457; --warn-bg:#33270F; color-scheme:dark }}
+*{box-sizing:border-box}
+html{scroll-padding-top:130px}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.5}
+.wrap{max-width:1280px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);font-stretch:85%;margin:0;text-wrap:balance}
+h1{font-size:1.5rem;font-weight:700}
+@media (max-width:600px){h1{font-size:1.15rem}} h2{font-size:1.25rem;font-weight:700}
+a{color:var(--accent)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)} .small{font-size:.8125rem}
+.lbl{font-size:.6875rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button,input{font:inherit;color:inherit}
+.top{position:sticky;top:0;z-index:5;background:var(--surface);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;padding-block:12px}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.mark{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:6px;background:var(--fg);color:var(--bg);font-family:var(--f-display);font-weight:700;font-size:.8rem}
+.draft{font-family:var(--f-mono);font-size:.6875rem;color:var(--warn);background:var(--warn-bg);padding:2px 6px;border-radius:4px}
+.seg{display:flex;flex-wrap:wrap;gap:2px;background:var(--surface-2);padding:2px;border-radius:7px}
+.seg button{border:0;background:none;padding:5px 10px;border-radius:5px;cursor:pointer;color:var(--muted);font-size:.8125rem;font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgb(0 0 0 / .08)}
+.search{flex:1 1 220px;max-width:340px;background:var(--surface-2);border:1px solid var(--line);border-radius:7px;padding:6px 10px}
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:28px;padding-block:24px 64px}
+@media (max-width:860px){.layout{grid-template-columns:minmax(0,1fr)}.index{display:none}}
+.index{position:sticky;top:90px;align-self:start;max-height:calc(100vh - 110px);overflow:auto;font-size:.8125rem}
+.index .g{margin:12px 0 2px;font-size:.6875rem;letter-spacing:.06em;text-transform:uppercase;font-weight:600;color:var(--fg)}
+.index a{display:block;color:var(--muted);text-decoration:none;padding:2px 8px;border-radius:5px;font-family:var(--f-mono);font-size:.75rem}
+.index a:hover{background:var(--surface-2);color:var(--fg)}
+.intro{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:20px;margin-bottom:28px}
+@media (max-width:860px){.intro{grid-template-columns:minmax(0,1fr)}}
+.intro p{margin:6px 0 0;color:var(--muted);max-width:65ch}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;align-self:start}
+.stats div{background:var(--surface);padding:12px 14px}
+.stats b{display:block;font-family:var(--f-display);font-size:1.5rem;font-stretch:85%}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:.8125rem;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.group{margin-bottom:32px;display:flex;flex-direction:column;gap:14px}
+.group-h{display:flex;align-items:baseline;gap:10px;padding-bottom:6px;border-bottom:2px solid var(--fg)}
+.tcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;border-left:4px solid var(--kc)}
+.k-core{--kc:var(--core)} .k-anagrafiche{--kc:var(--anag)} .k-flussi{--kc:var(--flussi)}
+.thead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px 16px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.thead h3{font-family:var(--f-mono);font-stretch:normal;font-weight:500;font-size:1rem}
+.thead p{margin:3px 0 0;color:var(--muted);font-size:.8125rem;max-width:80ch}
+.badges{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-start}
+.badge{font-size:.6875rem;padding:1px 7px;border-radius:4px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.tbl{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.8125rem}
+th{text-align:left;font-weight:600;font-size:.6875rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:7px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:6px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.c{font-family:var(--f-mono);font-weight:500;white-space:nowrap}
+td.t{font-family:var(--f-mono);color:var(--accent);white-space:nowrap}
+.pk{font-size:.625rem;font-family:var(--f-body);font-weight:600;color:var(--warn);margin-left:4px}
+.ref{font-family:var(--f-mono);font-size:.75rem}
+.vals{display:flex;flex-wrap:wrap;gap:3px;margin-top:3px}
+.vals span{font-size:.6875rem;padding:0 5px;border-radius:3px;background:var(--surface-2);color:var(--muted)}
+.inc{padding:8px 16px;border-top:1px solid var(--line);background:var(--surface-2);font-size:.75rem;color:var(--muted)}
+.inc a{font-family:var(--f-mono)}
+.empty{padding:40px;text-align:center;color:var(--muted)}
+footer{padding-block:24px 40px;color:var(--muted);font-size:.8125rem;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand"><span class="mark">N</span><h1>Schema database Nakama Hub</h1><span class="draft">BOZZA</span></div>
+  <div class="seg" role="group" aria-label="Parte dello schema" id="seg"></div>
+  <input class="search" id="q" type="search" placeholder="Cerca tabella, colonna, descrizione" aria-label="Cerca">
+</div></header>
+<div class="wrap layout">
+  <nav class="index" id="index" aria-label="Indice tabelle"></nav>
+  <main id="main"><p class="muted">Carico lo schema…</p></main>
+</div>
+<div class="wrap"><footer>
+  Generato da <a href="https://github.com/dmotion2022-wq/checkhub/tree/main/schema">schema/</a> con <span class="mono">gen_sql.py --json</span>.
+  Migrazione SQL: <a href="https://github.com/dmotion2022-wq/checkhub/blob/main/supabase/migrations/20261019000000_schema_hub_bozza.sql">supabase/migrations</a>.
+</footer></div>
+<script>
+const KIND = { core: "Nucleo", anagrafiche: "Anagrafiche", flussi: "Flussi e sincronizzazione" };
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const st = { k: "tutte", q: "" };
+let S = null;
+function match(t) {
+  if (st.k !== "tutte" && t.k !== st.k) return null;
+  if (!st.q) return t.cols;
+  const q = st.q.toLowerCase();
+  if ((t.n + " " + t.d + " " + t.g).toLowerCase().includes(q)) return t.cols;
+  const cols = t.cols.filter(c => (c.n + " " + c.t + " " + (c.d || "") + " " + (c.r || "")).toLowerCase().includes(q));
+  return cols.length ? cols : null;
+}
+function render() {
+  const T = S.tabelle, ncol = T.reduce((n, t) => n + t.cols.length, 0);
+  document.getElementById("seg").innerHTML = [["tutte", "Tutto"], ...Object.entries(KIND)].map(([k, l]) => `<button type="button" data-k="${k}" aria-pressed="${st.k === k}">${l}</button>`).join("");
+  const shown = T.map(t => ({ t, cols: match(t) })).filter(x => x.cols);
+  const groups = []; shown.forEach(x => { let g = groups.find(g => g.g === x.t.g && g.k === x.t.k); if (!g) groups.push(g = { g: x.t.g, gd: x.t.gd, k: x.t.k, items: [] }); g.items.push(x); });
+  document.getElementById("index").innerHTML = groups.map(g => `<div class="g">${esc(g.g)}</div>` + g.items.map(x => `<a href="#${x.t.n}">${esc(x.t.n)}</a>`).join("")).join("");
+  let h = `<section class="intro"><div>
+      <p class="lbl">Supabase · Postgres</p>
+      <h2>Tabelle, colonne e collegamenti</h2>
+      <p>Il database del Nakama Hub, l'applicativo comune di Chedo e Nakama. Le anagrafiche sono in validazione con il team: questa è una bozza.</p>
+      <p>Ogni tabella ha la colonna <span class="mono">rev</span> per gli aggiornamenti da più dispositivi: ogni modifica la incrementa e una modifica fatta su una versione vecchia non sovrascrive quella più recente. Ogni cambiamento finisce nella tabella <a href="#modifiche" class="mono">modifiche</a>.</p>
+      <div class="legend"><span><i style="background:var(--core)"></i>nucleo</span><span><i style="background:var(--anag)"></i>anagrafiche</span><span><i style="background:var(--flussi)"></i>flussi e sincronizzazione</span></div>
+    </div>
+    <div class="stats"><div><b>${T.length}</b><span class="small muted">tabelle</span></div><div><b>${ncol}</b><span class="small muted">colonne</span></div><div><b>${S.fk}</b><span class="small muted">collegamenti</span></div></div>
+  </section>`;
+  if (!groups.length) h += `<div class="empty">Nessuna tabella o colonna corrisponde alla ricerca.</div>`;
+  groups.forEach(g => {
+    h += `<section class="group"><div class="group-h"><h2>${esc(g.g)}</h2><span class="small muted">${KIND[g.k]}</span></div>${g.gd ? `<p class="small muted" style="margin:-6px 0 0;max-width:80ch">${esc(g.gd)}</p>` : ""}`;
+    g.items.forEach(({ t, cols }) => {
+      h += `<article class="tcard k-${t.k}" id="${t.n}"><div class="thead"><div><h3>${esc(t.n)}</h3>${t.d ? `<p>${esc(t.d)}</p>` : ""}</div>
+        <div class="badges"><span class="badge">${t.cols.length} colonne</span>${t.rt ? `<span class="badge">realtime</span>` : ""}${t.ext ? `<span class="badge mono" title="vincolo">${esc(t.ext)}</span>` : ""}</div></div>
+        <div class="tbl"><table><thead><tr><th>Colonna</th><th>Tipo</th><th>Collegata a</th><th>Descrizione</th></tr></thead><tbody>
+        ${cols.map(c => `<tr><td class="c">${esc(c.n)}${c.pk ? `<span class="pk">CHIAVE</span>` : ""}</td><td class="t">${esc(c.t)}</td>
+          <td>${c.r ? `<a class="ref" href="#${c.r}">${esc(c.r)}</a>` : ""}</td>
+          <td>${esc(c.d || "")}${c.ch ? `<div class="vals">${c.ch.map(v => `<span>${esc(v)}</span>`).join("")}</div>` : ""}</td></tr>`).join("")}
+        </tbody></table></div>
+        ${t.inc.length ? `<div class="inc">Usata da: ${t.inc.map(r => `<a href="#${r.split(".")[0]}">${esc(r)}</a>`).join(", ")}</div>` : ""}
+      </article>`;
+    });
+    h += `</section>`;
+  });
+  document.getElementById("main").innerHTML = h;
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-k]"); if (b) { st.k = b.dataset.k; render(); } });
+let qt; document.getElementById("q").addEventListener("input", e => { clearTimeout(qt); qt = setTimeout(() => { st.q = e.target.value.trim(); render(); }, 150); });
+fetch("schema.json").then(r => r.json()).then(d => { S = d; render(); if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView(); })
+  .catch(() => { document.getElementById("main").innerHTML = `<div class="empty">Non riesco a caricare schema.json.</div>`; });
+</script>
+</body>
+</html>
