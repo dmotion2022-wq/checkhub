@@ -5,7 +5,7 @@ Uso: cd schema && python3 gen_sql.py > ../supabase/migrations/20261019000000_sch
 import re
 import core_v1 as spec, anagrafiche_v1 as schema_db, flussi_v1 as schema_flussi
 
-SOSTITUITE = {"LOCATION": "strutture", "SALE": "spazi", "MEZZI": "veicoli", "FORNITORI": "fornitori"}
+SOSTITUITE = {"LOCATION": "location", "SALE": "spazi", "MEZZI": "veicoli", "FORNITORI": "fornitori"}
 OVERRIDE = {("impegni", "stato"): "lista: opzionato, confermato, accettato, rifiutato, annullato"}
 MERGE_ANAG = {"contatti": "contatti", "persone · profilo operativo": "persone", "articoli · aggiunte": "articoli"}
 
@@ -54,6 +54,7 @@ def tipo(t):
     if tl.startswith("%"): return ("numeric(7,3)", None, None)
     if tl.startswith("numero"): return ("numeric", None, None)
     if tl.startswith("coordinate"): return ("point", None, None)
+    if tl == "json": return ("jsonb", None, None)
     if tl.startswith("link o →"): return ("text", None, None)
     return ("text", None, None)  # testo, testo lungo, email, telefono, link, url
 
@@ -106,13 +107,19 @@ for area, adesc, tabs in schema_db.AREE:
             continue
         T = tab(ident(tname), f"{area} · {tdesc}", "anagrafiche")
         T.add("id", "uuid", "chiave interna", pk=True); T.pk = "id"
-        for c in schema_db.COMUNI[1:]: add_col(T, c[0], c[1], c[2])
+        for c in schema_db.COMUNI[1:]:
+            if c[0] != "rev": add_col(T, c[0], c[1], c[2])
         for c in cols: add_col(T, c[0], c[1], c[2])
 
 # chiavi primarie mancanti e risoluzione dei riferimenti
 for T in TABS.values():
     if T.pk is None:
         T.cols.insert(0, dict(name="id", type="bigint generated always as identity", comment="", ref=None, check=None, pk=True)); T.pk = "id"
+    if T.name != "modifiche":
+        T.add("rev", "integer not null default 1", "revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l'aggiornamento non passa")
+EXTRA_CHECK = {"spazi": "check (num_nonnulls(location_id, hotel_id, ristorante_id) = 1)"}
+REALTIME = ["commesse", "piano_commessa", "fasi", "fabbisogni", "impegni", "timesheet", "prenotazioni", "preventivi", "preventivi_righe",
+            "todo_clickup", "alert", "commessa_aree", "rdo_fornitori", "giri", "tappe", "logistica_persona", "validazioni", "dispositivi"]
 def target(ref):
     r = SOSTITUITE.get(ref, ref).lower()
     if r == "liste_valori": return None
@@ -153,6 +160,7 @@ for T in order:
         if c["check"]: line += f" check ({c['name']} in ({', '.join(q(v) for v in c['check'])}))"
         lines.append(line)
     if T.kind == "anagrafiche": lines.append("  unique (codice)")
+    if T.name in EXTRA_CHECK: lines.append("  " + EXTRA_CHECK[T.name])
     w(f"create table {T.name} (\n" + ",\n".join(lines) + "\n);")
     w(f"comment on table {T.name} is {q(T.comment)};")
     for c in T.cols:
@@ -161,6 +169,62 @@ for T in order:
 w("\n-- ════════ CHIAVI ESTERNE ════════\n")
 for t, c, tg, tpk in fks:
     w(f"alter table {t} add constraint {(t + '_' + c)[:55]}_fk foreign key ({c}) references {tg} ({tpk});")
+w("""
+-- ════════ SINCRONIZZAZIONE TRA DISPOSITIVI ════════
+-- 1. Ogni record ha una revisione (rev). Il trigger la incrementa e aggiorna aggiornato_il a ogni modifica.
+--    L'app aggiorna con il filtro rev=eq.<rev letta> (PostgREST): se un altro dispositivo ha già modificato
+--    il record, l'aggiornamento tocca 0 righe, l'app ricarica il record e unisce le modifiche campo per campo.
+--    Se l'app manda esplicitamente una rev diversa da quella attuale, il trigger rifiuta con errore 40001.
+-- 2. Ogni modifica finisce in MODIFICHE con utente e dispositivo (header x-hub-device).
+-- 3. Le tabelle operative sono pubblicate su Supabase Realtime: ogni dispositivo aperto riceve i cambiamenti.
+
+create or replace function hub_utente() returns text language sql stable as $$
+  select coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub', current_user::text)
+$$;
+create or replace function hub_dispositivo() returns text language sql stable as $$
+  select nullif(current_setting('request.headers', true), '')::jsonb ->> 'x-hub-device'
+$$;
+create or replace function hub_prima_di_modifica() returns trigger language plpgsql as $$
+begin
+  if new.rev is distinct from old.rev then
+    raise exception 'conflitto_versione: %.% è stato modificato da un altro dispositivo (rev attuale %, inviata %)',
+      TG_TABLE_NAME, to_jsonb(old) ->> TG_ARGV[0], old.rev, new.rev using errcode = '40001';
+  end if;
+  if to_jsonb(new) ? 'aggiornato_il' then
+    new := jsonb_populate_record(new, jsonb_build_object('rev', old.rev + 1, 'aggiornato_il', now()));
+  else
+    new.rev := old.rev + 1;
+  end if;
+  return new;
+end $$;
+create or replace function hub_registra() returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  vecchio jsonb := case when TG_OP <> 'INSERT' then to_jsonb(old) end;
+  nuovo   jsonb := case when TG_OP <> 'DELETE' then to_jsonb(new) end;
+  diff    jsonb;
+begin
+  if TG_OP = 'UPDATE' then
+    select jsonb_object_agg(k, jsonb_build_array(vecchio -> k, nuovo -> k)) into diff
+    from jsonb_object_keys(nuovo) as k
+    where (vecchio -> k) is distinct from (nuovo -> k) and k not in ('rev', 'aggiornato_il');
+    if diff is null then return null; end if;
+  end if;
+  insert into modifiche (tabella, record_id, operazione, differenze, utente, dispositivo, quando)
+  values (TG_TABLE_NAME, coalesce(nuovo, vecchio) ->> TG_ARGV[0], lower(TG_OP), coalesce(diff, nuovo, vecchio), hub_utente(), hub_dispositivo(), now());
+  return null;
+end $$;
+""")
+for T in order:
+    if T.name == "modifiche": continue
+    pk = next(c["name"] for c in T.cols if c["pk"])
+    w(f"create trigger {T.name}_rev before update on {T.name} for each row execute function hub_prima_di_modifica({q(pk)});")
+    w(f"create trigger {T.name}_log after insert or update or delete on {T.name} for each row execute function hub_registra({q(pk)});")
+w("""
+do $$ begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
+    alter publication supabase_realtime add table """ + ", ".join(REALTIME) + """;
+  end if;
+end $$;""")
 print("\n".join(out))
 import sys
 print(f"-- {len(TABS)} tabelle, {sum(len(t.cols) for t in TABS.values())} colonne, {len(fks)} chiavi esterne", file=sys.stderr)

@@ -55,14 +55,14 @@ TABELLE = [
   ("autista_persona_id", "→PERSONE", ""), ("stato", "lista: pianificato, confermato, fatto", ""), "note")),
  ("TAPPE", "Tappe di un giro: una tappa può servire più commesse", T(
   ("giro_id", "→GIRI", ""), ("ordine", "numero", ""), ("magazzino_id", "→MAGAZZINI", "se la tappa è un magazzino"),
-  ("struttura_id", "→strutture", "se la tappa è una location"),
+  ("location_id", "→location", "se la tappa è una location"), ("hotel_id", "→hotel", "se la tappa è un hotel"),
   ("azione", "lista: carico, scarico, ritiro, consegna", ""), ("commessa_id", "→COMMESSE", ""),
   ("prenotazione_id", "→PRENOTAZIONI", "materiale movimentato"), ("ora_prevista", "data e ora", ""), "note")),
  ("LOGISTICA_PERSONA", "Viaggio, hotel e transfer di una persona confermata su una commessa", T(
   ("logistica_id", "ID", ""), ("commessa_id", "→COMMESSE", ""), ("persona_id", "→PERSONE", ""),
   ("andata_il", "data e ora", ""), ("andata_mezzo", "lista: volo, treno, auto, furgone, altro", ""), ("andata_riferimento", "testo", "biglietto o PNR"),
   ("ritorno_il", "data e ora", ""), ("ritorno_mezzo", "lista: volo, treno, auto, furgone, altro", ""), ("ritorno_riferimento", "testo", ""),
-  ("hotel_struttura_id", "→strutture", ""), ("notti", "numero", ""), ("transfer", "testo", ""),
+  ("hotel_id", "→hotel", ""), ("notti", "numero", ""), ("transfer", "testo", ""),
   ("stato", "lista: da organizzare, richiesto, confermato", ""), ("costo", "€", ""))),
  ("PREVENTIVI_RIGHE", "Voci del preventivo di commessa, ognuna con il suo regime IVA", T(
   ("riga_id", "ID", ""), ("preventivo_id", "→PREVENTIVI", ""), ("sezione", "testo", "es. AUDIO, LOCATION"),
@@ -73,6 +73,17 @@ TABELLE = [
   ("fornitore_org_id", "→ORGANIZZAZIONI", ""),
   ("regime_iva", "lista: ordinaria, ridotta, esente, 74-ter, split payment, reverse charge, fuori campo", ""),
   ("aliquota_iva", "%", "22, 10, 4, 0"), ("ritenuta", "%", "per le prestazioni soggette"))),
+ # ── sincronizzazione tra dispositivi ──
+ ("DISPOSITIVI", "Computer, telefoni e tablet da cui ogni persona usa l'Hub", T(
+  ("dispositivo_id", "ID", "generato dall'app al primo accesso, inviato in ogni richiesta (header x-hub-device)"),
+  ("persona_id", "→PERSONE", ""), ("nome", "testo", "es. MacBook di Sara, iPhone magazzino"),
+  ("tipo", "lista: computer, telefono, tablet", ""), ("ultimo_sync", "data e ora", "ultima volta che ha ricevuto gli aggiornamenti"),
+  ("modifiche_in_attesa", "numero", "modifiche fatte offline non ancora inviate"), ("attivo", "sì/no", ""))),
+ ("MODIFICHE", "Registro di ogni modifica, scritto in automatico dal database: chi, da quale dispositivo, cosa è cambiato", T(
+  ("tabella", "testo", ""), ("record_id", "testo", ""), ("operazione", "lista: insert, update, delete", ""),
+  ("differenze", "json", "per gli update: {campo: [prima, dopo]}; per insert e delete: il record"),
+  ("utente", "testo", "id dell'utente Supabase"), ("dispositivo", "testo", "dispositivo_id dall'header x-hub-device"),
+  ("quando", "data e ora", ""), audit=False)),
 ]
 
 EXT = {

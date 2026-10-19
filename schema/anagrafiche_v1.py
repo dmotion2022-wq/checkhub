@@ -14,18 +14,16 @@ COMUNI = [
  ("note_interne", "testo lungo", "Note che non vanno mai al cliente", "", ""),
  ("attivo", "sì/no", "No = non proporre più, ma tienilo nello storico", "sì", "o"),
  ("creato_il · creato_da · aggiornato_il · aggiornato_da", "data e ora · →persone", "Tracciamento automatico", "", "o"),
+ ("rev", "numero", "Revisione: sale di 1 a ogni modifica. Se due dispositivi modificano la stessa scheda, il secondo non sovrascrive il primo ma unisce i cambiamenti", "7", "o"),
 ]
 
-AREE = [
-("STRUTTURE", "Ogni luogo fisico: hotel, location, ristoranti, venue di esperienze. Un posto può essere più cose insieme (un hotel che è anche location). Gli spazi interni sono comuni a tutti i tipi.", [
- ("strutture", "Il luogo in sé: dove si trova, come ci si arriva, vincoli. Una scheda per indirizzo", "STR", [
-  ("tipi", "lista multipla: hotel, location, ristorante, venue esperienza, centro congressi, altro", "Cosa è. Decide quali schede di dettaglio si aprono", "hotel, location", "o"),
-  ("nome", "testo", "Nome commerciale", "Grand Hotel Villa Serbelloni", "ov"),
-  ("gestore_fornitore_id", "→fornitori", "Chi la gestisce e ci fattura", "Villa Serbelloni S.p.A.", "ov"),
-  ("catena_gruppo", "testo", "Catena o gruppo alberghiero", "Marriott · Autograph Collection", "v"),
+# Campi comuni a ogni luogo fisico (location, hotel, ristoranti): si ripetono in ciascuna delle tre tabelle,
+# che restano entità separate. Una location non è un hotel e un hotel non è una location.
+LUOGO = [
+  ("nome", "testo", "Nome commerciale", "", "ov"),
+  ("gestore_fornitore_id", "→fornitori", "Chi la gestisce e ci fattura", "", "ov"),
   ("descrizione_preventivo", "testo lungo", "Testo breve pronto per proposte e preventivi al cliente", "", "v"),
   ("descrizione_interna", "testo lungo", "Cosa sappiamo noi: pregi, difetti, trucchi", "", ""),
-  ("stile", "lista multipla: storico, villa, moderno, industriale, museo, rooftop, giardino, resort, minimal, design", "Per cercare in base al mood", "villa, storico", ""),
   ("indirizzo", "testo", "Via e numero", "Via Roma 1", "ov"),
   ("cap · citta · provincia · regione · paese", "testo", "Localizzazione, una colonna ciascuno", "22021 · Bellagio · CO · Lombardia · Italia", "ov"),
   ("coordinate", "coordinate", "Latitudine e longitudine per mappa e distanze", "45.98, 9.26", ""),
@@ -37,22 +35,32 @@ AREE = [
   ("ztl", "sì/no", "In zona a traffico limitato: servono permessi per mezzi e carichi", "no", "v"),
   ("accesso_carico_scarico", "testo lungo", "Da dove si scarica, dimensioni passaggi, montacarichi, orari consentiti", "Ingresso di servizio lato giardino, porta 220×250 cm, 6–10 e 14–18", "v"),
   ("accessibilita_disabili", "lista: totale, parziale, no", "Accessibilità generale", "parziale", "v"),
-  ("capienza_max_totale", "numero", "Persone massime dell'intera struttura (da agibilità)", "450", "v"),
-  ("potenza_elettrica_kw", "numero", "Potenza disponibile per eventi. Oltre serve generatore", "120", "v"),
-  ("wifi", "testo", "Banda e note (dedicato eventi? cablato in sala?)", "1 Gbit fibra, rete dedicata su richiesta", "v"),
-  ("fornitori_obbligati", "testo lungo", "Catering, service o allestitori esclusivi imposti dalla struttura", "Catering in esclusiva interno; service libero", "v"),
-  ("vincoli", "testo lungo", "Limiti di orario, musica, decibel, fumo, fiamme, droni", "Musica amplificata fino alle 24, max 85 dB", "v"),
-  ("residente", "sì/no", "Chedo o Nakama sono fornitori fissi della struttura", "no", ""),
   ("sito_web", "link", "", "", ""),
   ("cartella_drive", "link", "Cartella Drive con foto, planimetrie, listini", "", ""),
-  ("ultimo_sopralluogo · sopralluogo_da", "data · →persone", "Chi l'ha vista dal vivo e quando", "2026-03-04 · Sara Colombo", ""),
+  ("ultimo_sopralluogo · sopralluogo_da", "data · →persone", "Chi l'ha visto dal vivo e quando", "2026-03-04 · Sara Colombo", ""),
   ("valutazione_interna", "numero 1–5", "Quanto ci siamo trovati bene", "4", ""),
+]
+def luogo(esempio_nome):
+    return [(c[0], c[1], c[2], esempio_nome if c[0] == "nome" else c[3], c[4]) for c in LUOGO]
+
+AREE = [
+("LOCATION", "Le location per gli eventi: ville, spazi industriali, musei, centri congressi, teatri. Sono entità separate da hotel e ristoranti. Gli spazi interni (sale, terrazze, giardini) e le loro capienze usano tabelle comuni a location, hotel e ristoranti.", [
+ ("location", "La location in sé: dove si trova, come ci si arriva, vincoli tecnici e di orario", "LOC", luogo("Villa Arte Viva") + [
+  ("tipologia", "lista multipla: villa, dimora storica, spazio industriale, museo, centro congressi, teatro, rooftop, all'aperto, studio, altro", "Che tipo di location è", "villa, dimora storica", "ov"),
+  ("stile", "lista multipla: storico, moderno, industriale, minimal, design, giardino, panoramico", "Per cercare in base al mood", "storico, giardino", ""),
+  ("capienza_max_totale", "numero", "Persone massime dell'intera location (da agibilità)", "450", "v"),
+  ("potenza_elettrica_kw", "numero", "Potenza disponibile per eventi. Oltre serve generatore", "120", "v"),
+  ("wifi", "testo", "Banda e note (dedicato eventi? cablato in sala?)", "1 Gbit fibra, rete dedicata su richiesta", "v"),
+  ("fornitori_obbligati", "testo lungo", "Catering, service o allestitori esclusivi imposti dalla location", "Catering in esclusiva interno; service libero", "v"),
+  ("vincoli", "testo lungo", "Limiti di orario, musica, decibel, fumo, fiamme, droni", "Musica amplificata fino alle 24, max 85 dB", "v"),
+  ("residente", "sì/no", "Chedo o Nakama sono fornitori fissi della location", "no", ""),
+  ("magazzino_id", "→magazzini", "Magazzino interno della location, se c'è", "Deposito Villa Arte Viva", ""),
  ]),
- ("spazi", "Ogni spazio prenotabile dentro una struttura: sala, terrazza, giardino, sala privata del ristorante. Uno spazio può contenerne altri (sala divisibile)", "SPZ", [
-  ("struttura_id", "→strutture", "Di quale struttura fa parte", "Villa Serbelloni", "o"),
+ ("spazi", "Ogni spazio prenotabile: sala, terrazza, giardino, sala meeting d'hotel, sala privata di ristorante. Appartiene a una sola tra location, hotel e ristorante. Uno spazio può contenerne altri (sala divisibile)", "SPZ", [
+  ("location_id · hotel_id · ristorante_id", "→location · →hotel · →ristoranti", "Di chi fa parte: se ne compila uno solo", "Villa Arte Viva · — · —", "o"),
   ("spazio_padre_id", "→spazi", "Se è una parte di uno spazio più grande (sala divisibile)", "Sala Bellagio → Bellagio A", ""),
   ("nome", "testo", "", "Sala degli Specchi", "ov"),
-  ("tipo", "lista: plenaria, sala meeting, sala banchetti, foyer, terrazza, giardino, area esterna, sala privata ristorante, intera struttura, altro", "", "plenaria", "o"),
+  ("tipo", "lista: plenaria, sala meeting, sala banchetti, foyer, terrazza, giardino, area esterna, sala privata ristorante, intera location, altro", "", "plenaria", "o"),
   ("interno_esterno", "lista: interno, esterno, coperto esterno", "", "interno", "o"),
   ("piano", "testo", "", "piano terra", "v"),
   ("mq", "numero", "Superficie calpestabile", "420", "ov"),
@@ -78,9 +86,9 @@ AREE = [
   ("note", "testo", "Es. 'con palco 8×4 scende a 300'", "", ""),
  ]),
 ]),
-("HOTEL", "Dettaglio alberghiero di una struttura di tipo hotel: camere, tariffe, pacchetti meeting. È il database da censire per primo.", [
- ("hotel", "Scheda hotel collegata alla struttura (una per hotel)", "HTL", [
-  ("struttura_id", "→strutture", "La struttura di riferimento", "", "o"),
+("HOTEL", "Gli hotel, entità separata dalle location: dove sono, camere, tariffe, pacchetti meeting. Le sale meeting sono spazi. È il database da censire per primo.", [
+ ("hotel", "Scheda hotel: il luogo e le condizioni alberghiere", "HTL", luogo("Grand Hotel Villa Serbelloni") + [
+  ("catena_gruppo", "testo", "Catena o gruppo alberghiero", "Marriott · Autograph Collection", "v"),
   ("stelle", "lista: 1, 2, 3, 3S, 4, 4S, 5, 5L", "Classificazione ufficiale", "5L", "ov"),
   ("categoria", "lista multipla: city, business, congressuale, resort, boutique, spa, aeroportuale", "", "resort, congressuale", "v"),
   ("camere_totali", "numero", "Camere dell'hotel", "95", "ov"),
@@ -134,9 +142,8 @@ AREE = [
   ("valido_dal · valido_al", "data", "", "2027-01-01 · 2027-12-31", "v"),
  ]),
 ]),
-("RISTORAZIONE", "Ristoranti (che sono strutture) e catering (che sono fornitori). I menu sono comuni a entrambi.", [
- ("ristoranti", "Scheda ristorante collegata alla struttura. Le sale private sono spazi", "RIS", [
-  ("struttura_id", "→strutture", "", "", "o"),
+("RISTORAZIONE", "Ristoranti (luoghi con il loro indirizzo) e catering (fornitori). I menu sono comuni a entrambi.", [
+ ("ristoranti", "Scheda ristorante. Le sale private sono spazi", "RIS", luogo("Trattoria del Porto") + [
   ("cucina", "lista multipla: italiana, regionale, pesce, carne, gourmet, etnica, pizzeria, vegetariana", "", "regionale, pesce", "v"),
   ("fascia_prezzo · prezzo_medio_persona", "lista: €, €€, €€€, €€€€ · €", "", "€€€ · 75", "v"),
   ("coperti_totali · coperti_max_gruppo", "numero", "", "120 · 80", "v"),
@@ -153,10 +160,10 @@ AREE = [
   ("raggio_operativo_km · costo_trasferta", "numero · €", "Fin dove arriva e quanto costa uscire dalla zona", "150 · 600", "v"),
   ("cucina_mobile", "sì/no", "Può cucinare in location senza cucina", "sì", "v"),
   ("include_personale · include_attrezzatura", "sì/no · sì/no", "Camerieri, tavoli, tovagliato, stoviglie compresi", "sì · sì", "v"),
-  ("strutture_convenzionate", "→strutture (lista)", "Location dove è già accreditato o in esclusiva", "Spazio Navigli", "v"),
+  ("location_convenzionate", "→location (lista)", "Location dove è già accreditato o in esclusiva", "Spazio Navigli", "v"),
  ]),
  ("menu", "Proposte di menu di ristoranti e catering", "MNU", [
-  ("fornitore_id · struttura_id", "→fornitori · →strutture", "Chi lo propone (catering) o dove (ristorante)", "", "o"),
+  ("fornitore_id · ristorante_id", "→fornitori · →ristoranti", "Chi lo propone (catering) o dove (ristorante)", "", "o"),
   ("nome", "testo", "", "Cena di gala 4 portate", "ov"),
   ("tipo_servizio", "lista: coffee break, light lunch, buffet, cena placé, cocktail, finger food, brunch", "", "cena placé", "o"),
   ("portate", "testo lungo", "Composizione del menu", "", "v"),
@@ -261,7 +268,7 @@ AREE = [
   ("durata_ore", "numero", "", "3", "v"),
   ("pax_min · pax_max", "numero", "", "10 · 80", "v"),
   ("interno_esterno · dipende_meteo · piano_b", "lista · sì/no · testo", "", "esterno · sì · sala coperta in cascina", "v"),
-  ("struttura_id · citta", "→strutture · testo", "Dove si svolge (se fisso)", "", "v"),
+  ("location_id · citta", "→location · testo", "Dove si svolge (se fisso)", "", "v"),
   ("mesi_disponibili", "lista multipla: gen–dic", "Stagionalità", "apr–ott", "v"),
   ("lingue", "lista multipla", "", "italiano, inglese, tedesco", "v"),
   ("impegno_fisico", "lista: basso, medio, alto", "", "basso", "v"),
@@ -333,8 +340,8 @@ AREE = [
  ]),
 ]),
 ("DOCUMENTI E VALIDAZIONE", "Certificazioni, permessi e assicurazioni di chiunque; allegati; validazione delle singole voci; richieste di censimento dei PM.", [
- ("documenti", "Certificazioni, permessi, assicurazioni con scadenza, per fornitori, strutture, persone, veicoli, noi stessi o una commessa", "DOC", [
-  ("oggetto_tipo · oggetto_id", "lista: fornitore, struttura, persona, veicolo, Chedo, Nakama, commessa · ID", "A chi appartiene il documento", "fornitore · Coop Tecnici", "o"),
+ ("documenti", "Certificazioni, permessi, assicurazioni con scadenza, per fornitori, location, hotel, ristoranti, persone, veicoli, noi stessi o una commessa", "DOC", [
+  ("oggetto_tipo · oggetto_id", "lista: fornitore, location, hotel, ristorante, persona, veicolo, Chedo, Nakama, commessa · ID", "A chi appartiene il documento", "fornitore · Coop Tecnici", "o"),
   ("tipo", "lista: DURC, visura camerale, polizza RC, polizza all risk, agibilità, CPI antincendio, ISO, HACCP, licenza NCC, suolo pubblico, SIAE, commissione di vigilanza, formazione sicurezza, idoneità medica, DVR, altro", "", "polizza RC", "o"),
   ("numero · ente_emittente", "testo", "", "", "v"),
   ("emesso_il · scadenza", "data", "", "2026-01-10 · 2027-01-10", "ov"),
@@ -373,16 +380,16 @@ AREE = [
 ]
 
 CATEGORIE = [
- ("Hotel", "strutture + hotel + camere_tipologie + tariffe_hotel + pacchetti_meeting + spazi"),
+ ("Hotel", "hotel + camere_tipologie + tariffe_hotel + pacchetti_meeting + spazi (sale meeting)"),
  ("Catering", "fornitori + catering + menu"),
- ("Location", "strutture + spazi + spazi_capienze"),
+ ("Location", "location + spazi + spazi_capienze"),
  ("Service", "fornitori + offerte (noleggio da terzi), collegato agli articoli del nostro magazzino"),
  ("Allestimenti", "fornitori + offerte"),
  ("Personale", "persone (profilo operativo) + persone_lingue + competenze; agenzie in fornitori"),
  ("Grafiche", "fornitori + offerte (materiali al mq); le grafiche di commessa restano in GRAFICHE"),
  ("Transfer", "fornitori + veicoli + tariffe_trasporto"),
  ("Mezzi di trasporto", "veicoli (nostri e dei fornitori)"),
- ("Ristoranti", "strutture + ristoranti + spazi (sale private) + menu"),
+ ("Ristoranti", "ristoranti + spazi (sale private) + menu"),
  ("Magazzino", "ARTICOLI, GIACENZE, PEZZI già esistenti + azienda proprietaria"),
  ("Partnership", "accordi_fornitore (verso i fornitori) + ACCORDI_PARTNER esistente (verso chi ci segnala)"),
  ("Persone interne", "PERSONE esistente"),

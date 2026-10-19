@@ -9,11 +9,12 @@ Schema del database del **Nakama Hub**, l'applicativo comune di Chedo e Nakama p
 | Percorso | Cosa contiene |
 |---|---|
 | `schema/core_v1.py` | Nucleo v1 (doc 09): configurazione e ruoli, persone, CRM, commesse, file e AI, magazzino, economia, operatività |
-| `schema/anagrafiche_v1.py` | Anagrafiche (doc 10): strutture e spazi, hotel, ristorazione, fornitori e offerte, trasporti, esperienze e talent, documenti, validazione delle singole voci |
+| `schema/anagrafiche_v1.py` | Anagrafiche (doc 10): location e spazi, hotel, ristoranti e catering, fornitori e offerte, trasporti, esperienze e talent, documenti, validazione delle singole voci |
 | `schema/anagrafiche_v1.json` | Le stesse anagrafiche in JSON, per l'interfaccia di validazione |
 | `schema/flussi_v1.py` | Flussi di commessa (docs 11-12): piano di lavoro e fasi, fabbisogni, alert, aree, richieste d'offerta, giri e tappe, logistica persone, righe di preventivo con regime IVA |
 | `schema/gen_sql.py` | Genera la migrazione SQL dai tre file sopra |
-| `supabase/migrations/20261019000000_schema_hub_bozza.sql` | Migrazione generata: 82 tabelle, 333 chiavi esterne, commenti su tabelle e colonne, RLS attiva |
+| `supabase/migrations/20261019000000_schema_hub_bozza.sql` | Migrazione generata: 84 tabelle, 342 chiavi esterne, commenti su tabelle e colonne, RLS attiva, trigger di sincronizzazione |
+| `CLAUDE.md` | Regole per chi lavora sullo schema da più dispositivi o sessioni |
 
 ## Come è scritto lo schema
 
@@ -33,11 +34,21 @@ Ogni tabella è un elenco di colonne `(nome, tipo, descrizione)` con tipi leggib
 Le righe con più colonne dello stesso tipo (es. `cap · citta · provincia`) diventano colonne separate.
 
 **Scelte principali:**
-- Le tabelle `location`, `sale`, `mezzi` e `fornitori` del nucleo sono sostituite da `strutture`, `spazi`, `veicoli` e `fornitori` delle anagrafiche.
+- **Location, hotel e ristoranti sono tre entità separate**, ognuna con il proprio indirizzo e accesso. Una location non è un hotel e un hotel non è una location. Hanno in comune solo la tabella `spazi` (sale, terrazze, sale meeting, sale private): ogni spazio appartiene a uno solo dei tre, e un vincolo lo garantisce.
+- Le tabelle `location`, `sale`, `mezzi` e `fornitori` del nucleo sono sostituite da `location`, `spazi`, `veicoli` e `fornitori` delle anagrafiche.
 - `contatti`, `persone` e `articoli` ricevono le colonne aggiuntive delle anagrafiche.
 - Ogni tabella anagrafica ha le colonne comuni: `codice`, `stato_scheda`, `quota_validata`, `fonte_principale`, `ultima_verifica`, `prossima_verifica`, `tag`, `note_interne`, `attivo`, tracciamento.
 - La validazione delle singole voci sta nella tabella `validazioni`.
 - Gli impegni di calendario dipendono dalle `fasi` della commessa. Le fasi si generano da `piano_commessa`.
+
+## Aggiornamenti da più dispositivi
+
+L'Hub sarà usato insieme da computer, telefoni e tablet. Lo schema lo gestisce così:
+
+- **Revisione per record (`rev`)**: ogni tabella ha una colonna `rev` che sale di 1 a ogni modifica. Un trigger la gestisce e aggiorna `aggiornato_il`. L'app aggiorna sempre con il filtro `rev=eq.<rev letta>`. Se nel frattempo un altro dispositivo ha modificato il record, l'aggiornamento non tocca nessuna riga. A quel punto l'app ricarica il record, unisce le modifiche campo per campo e chiede conferma solo se lo stesso campo è cambiato su entrambi i dispositivi. Una `rev` vecchia mandata esplicitamente viene rifiutata con errore `40001`.
+- **Registro `modifiche`**: ogni insert, update e delete viene scritto in automatico con le differenze campo per campo, l'utente e il dispositivo. Il dispositivo arriva dall'header `x-hub-device`.
+- **Tabella `dispositivi`**: per ogni persona, i suoi dispositivi, l'ultima sincronizzazione e le modifiche fatte offline ancora da inviare. Serve per il telefono del magazzino e per chi lavora in location senza rete.
+- **Realtime**: le tabelle operative (commesse, fasi, impegni, prenotazioni, preventivi…) sono pubblicate su Supabase Realtime. Ogni dispositivo aperto vede i cambiamenti senza ricaricare la pagina.
 
 ## Rigenerare la migrazione
 
@@ -46,12 +57,12 @@ cd schema
 python3 gen_sql.py > ../supabase/migrations/20261019000000_schema_hub_bozza.sql
 ```
 
-La migrazione è stata verificata su un Postgres 16 vuoto: si applica senza errori.
+La migrazione è stata verificata su un Postgres 16 vuoto. Si applica senza errori e i trigger funzionano: revisione, conflitto su `rev` vecchia, registro modifiche, vincolo sugli spazi.
 
 ## Ancora da fare
 
 - Policy RLS per ruolo, derivate dalla matrice dei permessi (tabella `permessi`).
-- Trigger per `aggiornato_il` e per riportare una voce a "da verificare" quando il valore validato cambia.
+- Trigger per riportare una voce a "da verificare" quando il valore validato cambia.
 - Tabelle dell'amministrazione (piano di fatturazione, documenti fornitore, pagamenti), rimandate.
 - Flussi leisure (Alpitour) e business travel.
 
@@ -71,7 +82,7 @@ La migrazione è stata verificata su un Postgres 16 vuoto: si applica senza erro
 
 ### Anagrafiche (doc 10)
 
-- **STRUTTURE**: `strutture`, `spazi`, `spazi_capienze`
+- **LOCATION**: `location`, `spazi`, `spazi_capienze`
 - **HOTEL**: `hotel`, `camere_tipologie`, `tariffe_hotel`, `pacchetti_meeting`
 - **RISTORAZIONE**: `ristoranti`, `catering`, `menu`
 - **FORNITORI**: `fornitori`, `fornitori_aree`, `contatti`, `offerte`, `accordi_fornitore`
@@ -81,7 +92,7 @@ La migrazione è stata verificata su un Postgres 16 vuoto: si applica senza erro
 - **MAGAZZINO E SERVIZI DIGITALI**: `articoli · aggiunte`, `servizi_digitali`
 - **DOCUMENTI E VALIDAZIONE**: `documenti`, `allegati`, `validazioni`, `richieste_censimento`
 
-### Flussi di commessa (docs 11-12)
+### Flussi di commessa e sincronizzazione (docs 11-12)
 
-- `piano_commessa`, `fasi`, `fabbisogni`, `alert_regole`, `alert`, `commessa_aree`, `richieste_offerta`, `rdo_fornitori`, `giri`, `tappe`, `logistica_persona`, `preventivi_righe`
+- `piano_commessa`, `fasi`, `fabbisogni`, `alert_regole`, `alert`, `commessa_aree`, `richieste_offerta`, `rdo_fornitori`, `giri`, `tappe`, `logistica_persona`, `preventivi_righe`, `dispositivi`, `modifiche`
 - Colonne aggiunte a: `commesse`, `impegni`, `timesheet`, `preventivi`

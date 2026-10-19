@@ -15,10 +15,12 @@ create table ruoli (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table ruoli is '00 · CONFIGURAZIONE · Il DB strutturato dell''Hub: ruoli, permessi, liste di valori, impostazioni';
 comment on column ruoli.ruolo_id is 'DIR, SYS, PM, COM, AMM, OPE, SEG, MAG, EXT';
+comment on column ruoli.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table ruoli enable row level security;
 
 create table aree (
@@ -30,11 +32,13 @@ create table aree (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table aree is '00 · CONFIGURAZIONE · Il DB strutturato dell''Hub: ruoli, permessi, liste di valori, impostazioni';
 comment on column aree.custode_ruolo_id is 'chi gestisce il dato';
 comment on column aree.attiva_mvp is 'presente nel frontend dell''MVP';
+comment on column aree.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table aree enable row level security;
 
 create table permessi (
@@ -45,10 +49,12 @@ create table permessi (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table permessi is '00 · CONFIGURAZIONE · Il DB strutturato dell''Hub: ruoli, permessi, liste di valori, impostazioni';
 comment on column permessi.livello is 'Gestisce, Modifica, Vede, Solo i propri, nessuno';
+comment on column permessi.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table permessi enable row level security;
 
 create table liste_valori (
@@ -62,10 +68,12 @@ create table liste_valori (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table liste_valori is '00 · CONFIGURAZIONE · Il DB strutturato dell''Hub: ruoli, permessi, liste di valori, impostazioni';
 comment on column liste_valori.lista is 'es. stato_commessa, linea, ruolo_progetto';
+comment on column liste_valori.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table liste_valori enable row level security;
 
 create table impostazioni (
@@ -75,9 +83,11 @@ create table impostazioni (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table impostazioni is '00 · CONFIGURAZIONE · Il DB strutturato dell''Hub: ruoli, permessi, liste di valori, impostazioni';
+comment on column impostazioni.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table impostazioni enable row level security;
 
 create table persone (
@@ -110,7 +120,8 @@ create table persone (
   taglia_divisa text,
   patenti text[],
   partita_iva boolean,
-  valutazione numeric
+  valutazione numeric,
+  rev integer not null default 1
 );
 comment on table persone is '01 · PERSONE · Chi usa l''Hub e chi lavora sugli eventi, dipendenti e freelance';
 comment on column persone.email_google is 'account di accesso all''Hub';
@@ -119,6 +130,7 @@ comment on column persone.agenzia_fornitore_id is 'Se arriva da un''agenzia (es.
 comment on column persone.rimborsi is 'Cosa si rimborsa e come';
 comment on column persone.taglia_divisa is 'Per hostess e staff in divisa';
 comment on column persone.partita_iva is 'Fattura o ritenuta';
+comment on column persone.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table persone enable row level security;
 
 create table persone_ruoli (
@@ -128,10 +140,12 @@ create table persone_ruoli (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table persone_ruoli is '01 · PERSONE · Chi usa l''Hub e chi lavora sugli eventi, dipendenti e freelance';
 comment on column persone_ruoli.ruolo_id is 'una persona può avere più ruoli';
+comment on column persone_ruoli.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table persone_ruoli enable row level security;
 
 create table competenze (
@@ -142,10 +156,12 @@ create table competenze (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table competenze is '01 · PERSONE · Chi usa l''Hub e chi lavora sugli eventi, dipendenti e freelance';
 comment on column competenze.competenza is 'es. MIDAS, VMIX, LEDWALL, RIGGER';
+comment on column competenze.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table competenze enable row level security;
 
 create table indisponibilita (
@@ -157,9 +173,11 @@ create table indisponibilita (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table indisponibilita is '01 · PERSONE · Chi usa l''Hub e chi lavora sugli eventi, dipendenti e freelance';
+comment on column indisponibilita.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table indisponibilita enable row level security;
 
 create table dati_riservati (
@@ -179,9 +197,11 @@ create table dati_riservati (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table dati_riservati is '01b · PERSONE · RISERVATO · Dati sensibili del personale: accesso solo amministrazione';
+comment on column dati_riservati.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table dati_riservati enable row level security;
 
 create table organizzazioni (
@@ -209,7 +229,8 @@ create table organizzazioni (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table organizzazioni is '02 · CRM · Clienti, agenzie, partner e lead con rebate, contatti, contratti quadro';
 comment on column organizzazioni.e_cliente is 'cliente finale';
@@ -217,6 +238,7 @@ comment on column organizzazioni.e_agenzia is 'agenzia che commissiona e paga';
 comment on column organizzazioni.e_partner is 'partner o lead che segnala e prende un rebate';
 comment on column organizzazioni.commerciale_persona_id is 'chi segue il rapporto';
 comment on column organizzazioni.fonte is 'come è arrivato';
+comment on column organizzazioni.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table organizzazioni enable row level security;
 
 create table contatti (
@@ -236,9 +258,11 @@ create table contatti (
   ruolo_contatto text[],
   cellulare text,
   reperibile_fuori_orario boolean,
-  lingue text[]
+  lingue text[],
+  rev integer not null default 1
 );
 comment on table contatti is '02 · CRM · Clienti, agenzie, partner e lead con rebate, contatti, contratti quadro';
+comment on column contatti.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table contatti enable row level security;
 
 create table agenzie_clienti (
@@ -251,11 +275,13 @@ create table agenzie_clienti (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table agenzie_clienti is '02 · CRM · Clienti, agenzie, partner e lead con rebate, contatti, contratti quadro';
 comment on column agenzie_clienti.agenzia_org_id is 'l''agenzia';
 comment on column agenzie_clienti.cliente_org_id is 'il cliente finale per cui lavora';
+comment on column agenzie_clienti.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table agenzie_clienti enable row level security;
 
 create table accordi_partner (
@@ -272,11 +298,13 @@ create table accordi_partner (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table accordi_partner is '02 · CRM · Clienti, agenzie, partner e lead con rebate, contatti, contratti quadro';
 comment on column accordi_partner.partner_org_id is 'il partner o lead';
 comment on column accordi_partner.ambito is 'es. generale, oppure grafiche/tessuti/spazi';
+comment on column accordi_partner.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table accordi_partner enable row level security;
 
 create table segnalazioni (
@@ -289,11 +317,13 @@ create table segnalazioni (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table segnalazioni is '02 · CRM · Clienti, agenzie, partner e lead con rebate, contatti, contratti quadro';
 comment on column segnalazioni.partner_org_id is 'chi ha passato il contatto';
 comment on column segnalazioni.verso_org_id is 'agenzia o cliente a cui è stato dato il nostro contatto';
+comment on column segnalazioni.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table segnalazioni enable row level security;
 
 create table contratti_quadro (
@@ -307,9 +337,11 @@ create table contratti_quadro (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table contratti_quadro is '02 · CRM · Clienti, agenzie, partner e lead con rebate, contatti, contratti quadro';
+comment on column contratti_quadro.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table contratti_quadro enable row level security;
 
 create table commesse (
@@ -361,7 +393,8 @@ create table commesse (
   catering_org_id text,
   lead_org_id text,
   lead_tipo text check (lead_tipo in ('rebate', 'sconto in fattura')),
-  lead_percentuale numeric(7,3)
+  lead_percentuale numeric(7,3),
+  rev integer not null default 1
 );
 comment on table commesse is '03 · COMMESSE · Il registro: commesse, brief, team, calendario di progetto';
 comment on column commesse.commessa_id is 'interno, non cambia mai';
@@ -381,6 +414,7 @@ comment on column commesse.costi_consuntivo is 'calcolato';
 comment on column commesse.margine_consuntivo is 'calcolato';
 comment on column commesse.referente_contatto_id is 'referente del cliente';
 comment on column commesse.lead_org_id is 'chi ha portato il cliente';
+comment on column commesse.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table commesse enable row level security;
 
 create table brief (
@@ -400,10 +434,12 @@ create table brief (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table brief is '03 · COMMESSE · Il registro: commesse, brief, team, calendario di progetto';
 comment on column brief.fonti_drive_url is '01_BRIEF/_sorgenti';
+comment on column brief.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table brief enable row level security;
 
 create table team (
@@ -417,10 +453,12 @@ create table team (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table team is '03 · COMMESSE · Il registro: commesse, brief, team, calendario di progetto';
 comment on column team.ruolo_progetto is 'es. coordinatore, fonico, hostess';
+comment on column team.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table team enable row level security;
 
 create table impegni (
@@ -444,11 +482,13 @@ create table impegni (
   posto_n numeric,
   confermato_da text,
   confermato_il timestamptz,
-  titolo_calendario text
+  titolo_calendario text,
+  rev integer not null default 1
 );
 comment on table impegni is '03 · COMMESSE · Il registro: commesse, brief, team, calendario di progetto';
 comment on column impegni.stato is 'conflitto se la persona non è disponibile';
 comment on column impegni.titolo_calendario is 'es. [D26-007] Fonico · Evento · Vela Pharma · Spazio Navigli';
+comment on column impegni.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table impegni enable row level security;
 
 create table storico_stati (
@@ -458,9 +498,11 @@ create table storico_stati (
   stato_a text,
   quando timestamptz,
   persona_id text,
-  nota text
+  nota text,
+  rev integer not null default 1
 );
 comment on table storico_stati is '03 · COMMESSE · Il registro: commesse, brief, team, calendario di progetto';
+comment on column storico_stati.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table storico_stati enable row level security;
 
 create table file (
@@ -479,12 +521,14 @@ create table file (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table file is '04 · FILE E AI · Indice dei file Drive, riassunti AI, aggiornamenti proposti dall''AI';
 comment on column file.location_id is 'se è un file di location';
 comment on column file.tipo_documento is 'preventivo, costing, contratto, planimetria…';
 comment on column file.modificato_il is 'su Drive';
+comment on column file.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table file enable row level security;
 
 create table riassunti (
@@ -499,10 +543,12 @@ create table riassunti (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table riassunti is '04 · FILE E AI · Indice dei file Drive, riassunti AI, aggiornamenti proposti dall''AI';
 comment on column riassunti.file_fonte is 'file_id usati';
+comment on column riassunti.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table riassunti enable row level security;
 
 create table proposte_ai (
@@ -519,10 +565,12 @@ create table proposte_ai (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table proposte_ai is '04 · FILE E AI · Indice dei file Drive, riassunti AI, aggiornamenti proposti dall''AI';
 comment on column proposte_ai.tabella is 'es. LOCATION';
+comment on column proposte_ai.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table proposte_ai enable row level security;
 
 create table magazzini (
@@ -535,10 +583,12 @@ create table magazzini (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table magazzini is '05 · LOCATION E MAGAZZINO · Location con il proprio magazzino, catalogo, giacenze, prenotazioni, movimenti';
 comment on column magazzini.location_id is 'se è il magazzino di una location';
+comment on column magazzini.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table magazzini enable row level security;
 
 create table articoli (
@@ -571,7 +621,8 @@ create table articoli (
   aggiornato_da text,
   azienda_proprietaria text check (azienda_proprietaria in ('Chedo', 'Nakama')),
   costo_interno_giorno numeric(12,2),
-  valore_sostituzione numeric(12,2)
+  valore_sostituzione numeric(12,2),
+  rev integer not null default 1
 );
 comment on table articoli is '05 · LOCATION E MAGAZZINO · Location con il proprio magazzino, catalogo, giacenze, prenotazioni, movimenti';
 comment on column articoli.categoria is 'es. 04 truss & rigging';
@@ -582,6 +633,7 @@ comment on column articoli.ordine_standard is 'quantità di riordino';
 comment on column articoli.azienda_proprietaria is 'Di chi è il bene (serve per noleggi interni e contabilità)';
 comment on column articoli.costo_interno_giorno is 'Prezzo al cliente e costo interno standard';
 comment on column articoli.valore_sostituzione is 'Per assicurazioni e danni';
+comment on column articoli.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table articoli enable row level security;
 
 create table pezzi (
@@ -594,10 +646,12 @@ create table pezzi (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table pezzi is '05 · LOCATION E MAGAZZINO · Location con il proprio magazzino, catalogo, giacenze, prenotazioni, movimenti';
 comment on column pezzi.magazzino_id is 'dove si trova';
+comment on column pezzi.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table pezzi enable row level security;
 
 create table giacenze (
@@ -611,10 +665,12 @@ create table giacenze (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table giacenze is '05 · LOCATION E MAGAZZINO · Location con il proprio magazzino, catalogo, giacenze, prenotazioni, movimenti';
 comment on column giacenze.scorta_minima is 'per i consumabili';
+comment on column giacenze.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table giacenze enable row level security;
 
 create table prenotazioni (
@@ -633,7 +689,8 @@ create table prenotazioni (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table prenotazioni is '05 · LOCATION E MAGAZZINO · Location con il proprio magazzino, catalogo, giacenze, prenotazioni, movimenti';
 comment on column prenotazioni.pezzo_id is 'solo se tracciato a pezzo';
@@ -642,6 +699,7 @@ comment on column prenotazioni.dal is 'uscita';
 comment on column prenotazioni.al is 'rientro';
 comment on column prenotazioni.richiesta_da is 'di solito il PM';
 comment on column prenotazioni.confermata_da is 'il magazziniere';
+comment on column prenotazioni.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table prenotazioni enable row level security;
 
 create table movimenti (
@@ -660,9 +718,11 @@ create table movimenti (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table movimenti is '05 · LOCATION E MAGAZZINO · Location con il proprio magazzino, catalogo, giacenze, prenotazioni, movimenti';
+comment on column movimenti.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table movimenti enable row level security;
 
 create table listino (
@@ -681,11 +741,13 @@ create table listino (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table listino is '06 · ECONOMIA · Listino, costing, preventivi, fatture, rebate';
 comment on column listino.categoria is 'service, allestimenti, grafiche, personale, segreteria…';
 comment on column listino.articolo_id is 'se legata a un articolo';
+comment on column listino.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table listino enable row level security;
 
 create table pacchetti (
@@ -698,18 +760,22 @@ create table pacchetti (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table pacchetti is '06 · ECONOMIA · Listino, costing, preventivi, fatture, rebate';
+comment on column pacchetti.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table pacchetti enable row level security;
 
 create table pacchetti_voci (
   id bigint generated always as identity primary key,
   pacchetto_id text,
   voce_id text,
-  quantita numeric
+  quantita numeric,
+  rev integer not null default 1
 );
 comment on table pacchetti_voci is '06 · ECONOMIA · Listino, costing, preventivi, fatture, rebate';
+comment on column pacchetti_voci.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table pacchetti_voci enable row level security;
 
 create table costing (
@@ -735,13 +801,15 @@ create table costing (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table costing is '06 · ECONOMIA · Listino, costing, preventivi, fatture, rebate';
 comment on column costing.computato is 'no = opzionale, fuori dai totali';
 comment on column costing.totale_costo is 'calcolato';
 comment on column costing.totale_ricavo is 'calcolato';
 comment on column costing.costo_reale is 'a consuntivo';
+comment on column costing.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table costing enable row level security;
 
 create table preventivi (
@@ -761,11 +829,13 @@ create table preventivi (
   aggiornato_da text,
   ver_file_docx_id text,
   ver_file_xlsx_id text,
-  ver_file_pdf_id text
+  ver_file_pdf_id text,
+  rev integer not null default 1
 );
 comment on table preventivi is '06 · ECONOMIA · Listino, costing, preventivi, fatture, rebate';
 comment on column preventivi.doc_url is 'Google Doc generato';
 comment on column preventivi.pdf_url is 'PDF al cliente';
+comment on column preventivi.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table preventivi enable row level security;
 
 create table fatture (
@@ -786,9 +856,11 @@ create table fatture (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table fatture is '06 · ECONOMIA · Listino, costing, preventivi, fatture, rebate';
+comment on column fatture.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table fatture enable row level security;
 
 create table rebate (
@@ -804,11 +876,13 @@ create table rebate (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table rebate is '06 · ECONOMIA · Listino, costing, preventivi, fatture, rebate';
 comment on column rebate.base is 'imponibile o margine della commessa';
 comment on column rebate.importo is 'calcolato';
+comment on column rebate.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table rebate enable row level security;
 
 create table ordini (
@@ -828,9 +902,11 @@ create table ordini (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table ordini is '07 · OPERATIVITÀ · Fornitori, ordini, noleggi, trasporti, grafiche, sicurezza, timesheet, to-do';
+comment on column ordini.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table ordini enable row level security;
 
 create table ordini_righe (
@@ -843,9 +919,11 @@ create table ordini_righe (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table ordini_righe is '07 · OPERATIVITÀ · Fornitori, ordini, noleggi, trasporti, grafiche, sicurezza, timesheet, to-do';
+comment on column ordini_righe.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table ordini_righe enable row level security;
 
 create table noleggi (
@@ -863,9 +941,11 @@ create table noleggi (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table noleggi is '07 · OPERATIVITÀ · Fornitori, ordini, noleggi, trasporti, grafiche, sicurezza, timesheet, to-do';
+comment on column noleggi.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table noleggi enable row level security;
 
 create table trasporti (
@@ -883,9 +963,11 @@ create table trasporti (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table trasporti is '07 · OPERATIVITÀ · Fornitori, ordini, noleggi, trasporti, grafiche, sicurezza, timesheet, to-do';
+comment on column trasporti.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table trasporti enable row level security;
 
 create table grafiche (
@@ -903,10 +985,12 @@ create table grafiche (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table grafiche is '07 · OPERATIVITÀ · Fornitori, ordini, noleggi, trasporti, grafiche, sicurezza, timesheet, to-do';
 comment on column grafiche.codice is 'GR-AREA-n';
+comment on column grafiche.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table grafiche enable row level security;
 
 create table sicurezza (
@@ -921,10 +1005,12 @@ create table sicurezza (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table sicurezza is '07 · OPERATIVITÀ · Fornitori, ordini, noleggi, trasporti, grafiche, sicurezza, timesheet, to-do';
 comment on column sicurezza.tipo is 'DUVRI, POS, piano di emergenza, certificazione…';
+comment on column sicurezza.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table sicurezza enable row level security;
 
 create table timesheet (
@@ -942,10 +1028,12 @@ create table timesheet (
   impegno_id text,
   ore_previste numeric,
   ore_effettive numeric,
-  stato text check (stato in ('previsto', 'consuntivato', 'approvato'))
+  stato text check (stato in ('previsto', 'consuntivato', 'approvato')),
+  rev integer not null default 1
 );
 comment on table timesheet is '07 · OPERATIVITÀ · Fornitori, ordini, noleggi, trasporti, grafiche, sicurezza, timesheet, to-do';
 comment on column timesheet.ore_previste is 'dal piano';
+comment on column timesheet.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table timesheet enable row level security;
 
 create table todo_clickup (
@@ -956,16 +1044,18 @@ create table todo_clickup (
   scadenza date,
   stato text,
   url text,
-  ultimo_sync timestamptz
+  ultimo_sync timestamptz,
+  rev integer not null default 1
 );
 comment on table todo_clickup is '07 · OPERATIVITÀ · Fornitori, ordini, noleggi, trasporti, grafiche, sicurezza, timesheet, to-do';
 comment on column todo_clickup.ultimo_sync is 'copia di sola lettura: la fonte è ClickUp';
+comment on column todo_clickup.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table todo_clickup enable row level security;
 
 
 -- ════════ ANAGRAFICHE (doc 10) ════════
 
-create table strutture (
+create table location (
   id uuid primary key default gen_random_uuid(),
   codice text,
   stato_scheda text check (stato_scheda in ('bozza', 'da validare', 'validata', 'da aggiornare', 'archiviata')),
@@ -980,13 +1070,10 @@ create table strutture (
   creato_da text,
   aggiornato_il timestamptz not null default now(),
   aggiornato_da text,
-  tipi text[],
   nome text,
   gestore_fornitore_id uuid,
-  catena_gruppo text,
   descrizione_preventivo text,
   descrizione_interna text,
-  stile text[],
   indirizzo text,
   cap text,
   citta text,
@@ -1005,70 +1092,75 @@ create table strutture (
   ztl boolean,
   accesso_carico_scarico text,
   accessibilita_disabili text check (accessibilita_disabili in ('totale', 'parziale', 'no')),
+  sito_web text,
+  cartella_drive text,
+  ultimo_sopralluogo date,
+  sopralluogo_da text,
+  valutazione_interna numeric,
+  tipologia text[],
+  stile text[],
   capienza_max_totale numeric,
   potenza_elettrica_kw numeric,
   wifi text,
   fornitori_obbligati text,
   vincoli text,
   residente boolean,
-  sito_web text,
-  cartella_drive text,
-  ultimo_sopralluogo date,
-  sopralluogo_da text,
-  valutazione_interna numeric,
+  magazzino_id text,
+  rev integer not null default 1,
   unique (codice)
 );
-comment on table strutture is 'STRUTTURE · Il luogo in sé: dove si trova, come ci si arriva, vincoli. Una scheda per indirizzo';
-comment on column strutture.id is 'chiave interna';
-comment on column strutture.codice is 'Codice leggibile per prefisso di tabella';
-comment on column strutture.stato_scheda is 'Stato della scheda nel suo insieme. Diventa ''da aggiornare'' se una voce validata scade o cambia';
-comment on column strutture.quota_validata is 'Quante voci validabili della scheda sono validate';
-comment on column strutture.fonte_principale is 'Da dove arrivano i dati della scheda';
-comment on column strutture.ultima_verifica is 'Ultima volta che qualcuno ha controllato la scheda';
-comment on column strutture.prossima_verifica is 'Quando ricontrollarla (es. nuovo listino annuale)';
-comment on column strutture.tag is 'Etichette libere per ricerca e filtri';
-comment on column strutture.note_interne is 'Note che non vanno mai al cliente';
-comment on column strutture.attivo is 'No = non proporre più, ma tienilo nello storico';
-comment on column strutture.creato_il is 'Tracciamento automatico';
-comment on column strutture.creato_da is 'Tracciamento automatico';
-comment on column strutture.aggiornato_il is 'Tracciamento automatico';
-comment on column strutture.aggiornato_da is 'Tracciamento automatico';
-comment on column strutture.tipi is 'Cosa è. Decide quali schede di dettaglio si aprono';
-comment on column strutture.nome is 'Nome commerciale';
-comment on column strutture.gestore_fornitore_id is 'Chi la gestisce e ci fattura';
-comment on column strutture.catena_gruppo is 'Catena o gruppo alberghiero';
-comment on column strutture.descrizione_preventivo is 'Testo breve pronto per proposte e preventivi al cliente';
-comment on column strutture.descrizione_interna is 'Cosa sappiamo noi: pregi, difetti, trucchi';
-comment on column strutture.stile is 'Per cercare in base al mood';
-comment on column strutture.indirizzo is 'Via e numero';
-comment on column strutture.cap is 'Localizzazione, una colonna ciascuno';
-comment on column strutture.citta is 'Localizzazione, una colonna ciascuno';
-comment on column strutture.provincia is 'Localizzazione, una colonna ciascuno';
-comment on column strutture.regione is 'Localizzazione, una colonna ciascuno';
-comment on column strutture.paese is 'Localizzazione, una colonna ciascuno';
-comment on column strutture.coordinate is 'Latitudine e longitudine per mappa e distanze';
-comment on column strutture.zona is 'Zona riconoscibile';
-comment on column strutture.aeroporto_riferimento is 'Aeroporto più comodo e distanza';
-comment on column strutture.distanza_aeroporto_km is 'Aeroporto più comodo e distanza';
-comment on column strutture.stazione_riferimento is 'Stazione più comoda e distanza';
-comment on column strutture.distanza_stazione_km is 'Stazione più comoda e distanza';
-comment on column strutture.distanza_centro_km is 'Distanza dal centro città';
-comment on column strutture.parcheggio_posti is 'Posti auto e se i bus GT possono arrivare e sostare';
-comment on column strutture.parcheggio_bus is 'Posti auto e se i bus GT possono arrivare e sostare';
-comment on column strutture.ztl is 'In zona a traffico limitato: servono permessi per mezzi e carichi';
-comment on column strutture.accesso_carico_scarico is 'Da dove si scarica, dimensioni passaggi, montacarichi, orari consentiti';
-comment on column strutture.accessibilita_disabili is 'Accessibilità generale';
-comment on column strutture.capienza_max_totale is 'Persone massime dell''intera struttura (da agibilità)';
-comment on column strutture.potenza_elettrica_kw is 'Potenza disponibile per eventi. Oltre serve generatore';
-comment on column strutture.wifi is 'Banda e note (dedicato eventi? cablato in sala?)';
-comment on column strutture.fornitori_obbligati is 'Catering, service o allestitori esclusivi imposti dalla struttura';
-comment on column strutture.vincoli is 'Limiti di orario, musica, decibel, fumo, fiamme, droni';
-comment on column strutture.residente is 'Chedo o Nakama sono fornitori fissi della struttura';
-comment on column strutture.cartella_drive is 'Cartella Drive con foto, planimetrie, listini';
-comment on column strutture.ultimo_sopralluogo is 'Chi l''ha vista dal vivo e quando';
-comment on column strutture.sopralluogo_da is 'Chi l''ha vista dal vivo e quando';
-comment on column strutture.valutazione_interna is 'Quanto ci siamo trovati bene';
-alter table strutture enable row level security;
+comment on table location is 'LOCATION · La location in sé: dove si trova, come ci si arriva, vincoli tecnici e di orario';
+comment on column location.id is 'chiave interna';
+comment on column location.codice is 'Codice leggibile per prefisso di tabella';
+comment on column location.stato_scheda is 'Stato della scheda nel suo insieme. Diventa ''da aggiornare'' se una voce validata scade o cambia';
+comment on column location.quota_validata is 'Quante voci validabili della scheda sono validate';
+comment on column location.fonte_principale is 'Da dove arrivano i dati della scheda';
+comment on column location.ultima_verifica is 'Ultima volta che qualcuno ha controllato la scheda';
+comment on column location.prossima_verifica is 'Quando ricontrollarla (es. nuovo listino annuale)';
+comment on column location.tag is 'Etichette libere per ricerca e filtri';
+comment on column location.note_interne is 'Note che non vanno mai al cliente';
+comment on column location.attivo is 'No = non proporre più, ma tienilo nello storico';
+comment on column location.creato_il is 'Tracciamento automatico';
+comment on column location.creato_da is 'Tracciamento automatico';
+comment on column location.aggiornato_il is 'Tracciamento automatico';
+comment on column location.aggiornato_da is 'Tracciamento automatico';
+comment on column location.nome is 'Nome commerciale';
+comment on column location.gestore_fornitore_id is 'Chi la gestisce e ci fattura';
+comment on column location.descrizione_preventivo is 'Testo breve pronto per proposte e preventivi al cliente';
+comment on column location.descrizione_interna is 'Cosa sappiamo noi: pregi, difetti, trucchi';
+comment on column location.indirizzo is 'Via e numero';
+comment on column location.cap is 'Localizzazione, una colonna ciascuno';
+comment on column location.citta is 'Localizzazione, una colonna ciascuno';
+comment on column location.provincia is 'Localizzazione, una colonna ciascuno';
+comment on column location.regione is 'Localizzazione, una colonna ciascuno';
+comment on column location.paese is 'Localizzazione, una colonna ciascuno';
+comment on column location.coordinate is 'Latitudine e longitudine per mappa e distanze';
+comment on column location.zona is 'Zona riconoscibile';
+comment on column location.aeroporto_riferimento is 'Aeroporto più comodo e distanza';
+comment on column location.distanza_aeroporto_km is 'Aeroporto più comodo e distanza';
+comment on column location.stazione_riferimento is 'Stazione più comoda e distanza';
+comment on column location.distanza_stazione_km is 'Stazione più comoda e distanza';
+comment on column location.distanza_centro_km is 'Distanza dal centro città';
+comment on column location.parcheggio_posti is 'Posti auto e se i bus GT possono arrivare e sostare';
+comment on column location.parcheggio_bus is 'Posti auto e se i bus GT possono arrivare e sostare';
+comment on column location.ztl is 'In zona a traffico limitato: servono permessi per mezzi e carichi';
+comment on column location.accesso_carico_scarico is 'Da dove si scarica, dimensioni passaggi, montacarichi, orari consentiti';
+comment on column location.accessibilita_disabili is 'Accessibilità generale';
+comment on column location.cartella_drive is 'Cartella Drive con foto, planimetrie, listini';
+comment on column location.ultimo_sopralluogo is 'Chi l''ha visto dal vivo e quando';
+comment on column location.sopralluogo_da is 'Chi l''ha visto dal vivo e quando';
+comment on column location.valutazione_interna is 'Quanto ci siamo trovati bene';
+comment on column location.tipologia is 'Che tipo di location è';
+comment on column location.stile is 'Per cercare in base al mood';
+comment on column location.capienza_max_totale is 'Persone massime dell''intera location (da agibilità)';
+comment on column location.potenza_elettrica_kw is 'Potenza disponibile per eventi. Oltre serve generatore';
+comment on column location.wifi is 'Banda e note (dedicato eventi? cablato in sala?)';
+comment on column location.fornitori_obbligati is 'Catering, service o allestitori esclusivi imposti dalla location';
+comment on column location.vincoli is 'Limiti di orario, musica, decibel, fumo, fiamme, droni';
+comment on column location.residente is 'Chedo o Nakama sono fornitori fissi della location';
+comment on column location.magazzino_id is 'Magazzino interno della location, se c''è';
+comment on column location.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
+alter table location enable row level security;
 
 create table spazi (
   id uuid primary key default gen_random_uuid(),
@@ -1085,10 +1177,12 @@ create table spazi (
   creato_da text,
   aggiornato_il timestamptz not null default now(),
   aggiornato_da text,
-  struttura_id uuid,
+  location_id uuid,
+  hotel_id uuid,
+  ristorante_id uuid,
   spazio_padre_id uuid,
   nome text,
-  tipo text check (tipo in ('plenaria', 'sala meeting', 'sala banchetti', 'foyer', 'terrazza', 'giardino', 'area esterna', 'sala privata ristorante', 'intera struttura', 'altro')),
+  tipo text check (tipo in ('plenaria', 'sala meeting', 'sala banchetti', 'foyer', 'terrazza', 'giardino', 'area esterna', 'sala privata ristorante', 'intera location', 'altro')),
   interno_esterno text check (interno_esterno in ('interno', 'esterno', 'coperto esterno')),
   piano text,
   mq numeric,
@@ -1111,9 +1205,11 @@ create table spazi (
   tipo_prezzo text check (tipo_prezzo in ('netto', 'commissionabile', 'pubblico')),
   iva_inclusa boolean,
   planimetria uuid,
-  unique (codice)
+  rev integer not null default 1,
+  unique (codice),
+  check (num_nonnulls(location_id, hotel_id, ristorante_id) = 1)
 );
-comment on table spazi is 'STRUTTURE · Ogni spazio prenotabile dentro una struttura: sala, terrazza, giardino, sala privata del ristorante. Uno spazio può contenerne altri (sala divisibile)';
+comment on table spazi is 'LOCATION · Ogni spazio prenotabile: sala, terrazza, giardino, sala meeting d''hotel, sala privata di ristorante. Appartiene a una sola tra location, hotel e ristorante. Uno spazio può contenerne altri (sala divisibile)';
 comment on column spazi.id is 'chiave interna';
 comment on column spazi.codice is 'Codice leggibile per prefisso di tabella';
 comment on column spazi.stato_scheda is 'Stato della scheda nel suo insieme. Diventa ''da aggiornare'' se una voce validata scade o cambia';
@@ -1128,7 +1224,9 @@ comment on column spazi.creato_il is 'Tracciamento automatico';
 comment on column spazi.creato_da is 'Tracciamento automatico';
 comment on column spazi.aggiornato_il is 'Tracciamento automatico';
 comment on column spazi.aggiornato_da is 'Tracciamento automatico';
-comment on column spazi.struttura_id is 'Di quale struttura fa parte';
+comment on column spazi.location_id is 'Di chi fa parte: se ne compila uno solo';
+comment on column spazi.hotel_id is 'Di chi fa parte: se ne compila uno solo';
+comment on column spazi.ristorante_id is 'Di chi fa parte: se ne compila uno solo';
 comment on column spazi.spazio_padre_id is 'Se è una parte di uno spazio più grande (sala divisibile)';
 comment on column spazi.mq is 'Superficie calpestabile';
 comment on column spazi.lunghezza_m is 'Dimensioni principali';
@@ -1147,6 +1245,7 @@ comment on column spazi.prezzo_mezza_giornata is 'Affitto dello spazio, al netto
 comment on column spazi.prezzo_giornata is 'Affitto dello spazio, al netto o pubblico (vedi tipo_prezzo)';
 comment on column spazi.prezzo_giorno_allestimento is 'Costo per i giorni di montaggio e smontaggio';
 comment on column spazi.planimetria is 'Pianta con quote';
+comment on column spazi.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table spazi enable row level security;
 
 create table spazi_capienze (
@@ -1168,9 +1267,10 @@ create table spazi_capienze (
   layout text check (layout in ('platea', 'banchi scuola', 'ferro di cavallo', 'boardroom', 'banchetto tondi', 'cabaret', 'cocktail in piedi', 'gala con palco')),
   pax_max numeric,
   note text,
+  rev integer not null default 1,
   unique (codice)
 );
-comment on table spazi_capienze is 'STRUTTURE · Quante persone stanno in uno spazio per ogni disposizione. Una riga per layout';
+comment on table spazi_capienze is 'LOCATION · Quante persone stanno in uno spazio per ogni disposizione. Una riga per layout';
 comment on column spazi_capienze.id is 'chiave interna';
 comment on column spazi_capienze.codice is 'Codice leggibile per prefisso di tabella';
 comment on column spazi_capienze.stato_scheda is 'Stato della scheda nel suo insieme. Diventa ''da aggiornare'' se una voce validata scade o cambia';
@@ -1187,6 +1287,7 @@ comment on column spazi_capienze.aggiornato_il is 'Tracciamento automatico';
 comment on column spazi_capienze.aggiornato_da is 'Tracciamento automatico';
 comment on column spazi_capienze.pax_max is 'Persone massime con quel layout';
 comment on column spazi_capienze.note is 'Es. ''con palco 8×4 scende a 300''';
+comment on column spazi_capienze.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table spazi_capienze enable row level security;
 
 create table hotel (
@@ -1204,7 +1305,34 @@ create table hotel (
   creato_da text,
   aggiornato_il timestamptz not null default now(),
   aggiornato_da text,
-  struttura_id uuid,
+  nome text,
+  gestore_fornitore_id uuid,
+  descrizione_preventivo text,
+  descrizione_interna text,
+  indirizzo text,
+  cap text,
+  citta text,
+  provincia text,
+  regione text,
+  paese text,
+  coordinate point,
+  zona text,
+  aeroporto_riferimento text,
+  distanza_aeroporto_km numeric,
+  stazione_riferimento text,
+  distanza_stazione_km numeric,
+  distanza_centro_km numeric,
+  parcheggio_posti numeric,
+  parcheggio_bus boolean,
+  ztl boolean,
+  accesso_carico_scarico text,
+  accessibilita_disabili text check (accessibilita_disabili in ('totale', 'parziale', 'no')),
+  sito_web text,
+  cartella_drive text,
+  ultimo_sopralluogo date,
+  sopralluogo_da text,
+  valutazione_interna numeric,
+  catena_gruppo text,
   stelle text check (stelle in ('1', '2', '3', '3S', '4', '4S', '5', '5L')),
   categoria text[],
   camere_totali numeric,
@@ -1224,9 +1352,10 @@ create table hotel (
   contatto_gruppi_id text,
   contatto_eventi_id text,
   certificazioni_green text[],
+  rev integer not null default 1,
   unique (codice)
 );
-comment on table hotel is 'HOTEL · Scheda hotel collegata alla struttura (una per hotel)';
+comment on table hotel is 'HOTEL · Scheda hotel: il luogo e le condizioni alberghiere';
 comment on column hotel.id is 'chiave interna';
 comment on column hotel.codice is 'Codice leggibile per prefisso di tabella';
 comment on column hotel.stato_scheda is 'Stato della scheda nel suo insieme. Diventa ''da aggiornare'' se una voce validata scade o cambia';
@@ -1241,7 +1370,33 @@ comment on column hotel.creato_il is 'Tracciamento automatico';
 comment on column hotel.creato_da is 'Tracciamento automatico';
 comment on column hotel.aggiornato_il is 'Tracciamento automatico';
 comment on column hotel.aggiornato_da is 'Tracciamento automatico';
-comment on column hotel.struttura_id is 'La struttura di riferimento';
+comment on column hotel.nome is 'Nome commerciale';
+comment on column hotel.gestore_fornitore_id is 'Chi la gestisce e ci fattura';
+comment on column hotel.descrizione_preventivo is 'Testo breve pronto per proposte e preventivi al cliente';
+comment on column hotel.descrizione_interna is 'Cosa sappiamo noi: pregi, difetti, trucchi';
+comment on column hotel.indirizzo is 'Via e numero';
+comment on column hotel.cap is 'Localizzazione, una colonna ciascuno';
+comment on column hotel.citta is 'Localizzazione, una colonna ciascuno';
+comment on column hotel.provincia is 'Localizzazione, una colonna ciascuno';
+comment on column hotel.regione is 'Localizzazione, una colonna ciascuno';
+comment on column hotel.paese is 'Localizzazione, una colonna ciascuno';
+comment on column hotel.coordinate is 'Latitudine e longitudine per mappa e distanze';
+comment on column hotel.zona is 'Zona riconoscibile';
+comment on column hotel.aeroporto_riferimento is 'Aeroporto più comodo e distanza';
+comment on column hotel.distanza_aeroporto_km is 'Aeroporto più comodo e distanza';
+comment on column hotel.stazione_riferimento is 'Stazione più comoda e distanza';
+comment on column hotel.distanza_stazione_km is 'Stazione più comoda e distanza';
+comment on column hotel.distanza_centro_km is 'Distanza dal centro città';
+comment on column hotel.parcheggio_posti is 'Posti auto e se i bus GT possono arrivare e sostare';
+comment on column hotel.parcheggio_bus is 'Posti auto e se i bus GT possono arrivare e sostare';
+comment on column hotel.ztl is 'In zona a traffico limitato: servono permessi per mezzi e carichi';
+comment on column hotel.accesso_carico_scarico is 'Da dove si scarica, dimensioni passaggi, montacarichi, orari consentiti';
+comment on column hotel.accessibilita_disabili is 'Accessibilità generale';
+comment on column hotel.cartella_drive is 'Cartella Drive con foto, planimetrie, listini';
+comment on column hotel.ultimo_sopralluogo is 'Chi l''ha visto dal vivo e quando';
+comment on column hotel.sopralluogo_da is 'Chi l''ha visto dal vivo e quando';
+comment on column hotel.valutazione_interna is 'Quanto ci siamo trovati bene';
+comment on column hotel.catena_gruppo is 'Catena o gruppo alberghiero';
 comment on column hotel.stelle is 'Classificazione ufficiale';
 comment on column hotel.camere_totali is 'Camere dell''hotel';
 comment on column hotel.camere_max_gruppo is 'Quante camere concedono di solito a un gruppo';
@@ -1253,6 +1408,7 @@ comment on column hotel.canale_prenotazione is 'Da dove prenotiamo di solito';
 comment on column hotel.codice_su_piattaforma is 'Codice dell''hotel su Alpitour o altra piattaforma, per il collegamento col leisure';
 comment on column hotel.contatto_gruppi_id is 'Referenti per camere gruppi e per sale/eventi';
 comment on column hotel.contatto_eventi_id is 'Referenti per camere gruppi e per sale/eventi';
+comment on column hotel.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table hotel enable row level security;
 
 create table camere_tipologie (
@@ -1281,6 +1437,7 @@ create table camere_tipologie (
   vista text,
   accessibile boolean,
   comunicanti boolean,
+  rev integer not null default 1,
   unique (codice)
 );
 comment on table camere_tipologie is 'HOTEL · Le tipologie di camera dell''hotel. Una riga per tipologia';
@@ -1303,6 +1460,7 @@ comment on column camere_tipologie.categoria is 'Per confrontare hotel diversi';
 comment on column camere_tipologie.numero_camere is 'Quante ne hanno di questo tipo';
 comment on column camere_tipologie.occupazione_max is 'Persone massime';
 comment on column camere_tipologie.uso_singola is 'Vendibile come DUS';
+comment on column camere_tipologie.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table camere_tipologie enable row level security;
 
 create table tariffe_hotel (
@@ -1336,6 +1494,7 @@ create table tariffe_hotel (
   release_giorni numeric,
   valida_per text check (valida_per in ('gruppi', 'individuali', 'entrambi')),
   fonte_link text,
+  rev integer not null default 1,
   unique (codice)
 );
 comment on table tariffe_hotel is 'HOTEL · Prezzi delle camere per periodo, occupazione e trattamento. Ogni riga è validabile e scade';
@@ -1362,6 +1521,7 @@ comment on column tariffe_hotel.prezzo_notte is 'Prezzo della camera a notte';
 comment on column tariffe_hotel.allotment_camere is 'Camere bloccate per noi a questa tariffa';
 comment on column tariffe_hotel.release_giorni is 'Se diverso da quello standard dell''hotel';
 comment on column tariffe_hotel.fonte_link is 'Offerta o listino da cui arriva il prezzo';
+comment on column tariffe_hotel.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table tariffe_hotel enable row level security;
 
 create table pacchetti_meeting (
@@ -1386,6 +1546,7 @@ create table pacchetti_meeting (
   pax_min numeric,
   valido_dal date,
   valido_al date,
+  rev integer not null default 1,
   unique (codice)
 );
 comment on table pacchetti_meeting is 'HOTEL · Pacchetti a persona per riunioni (DDR, mezza giornata, residenziale)';
@@ -1404,6 +1565,7 @@ comment on column pacchetti_meeting.creato_da is 'Tracciamento automatico';
 comment on column pacchetti_meeting.aggiornato_il is 'Tracciamento automatico';
 comment on column pacchetti_meeting.aggiornato_da is 'Tracciamento automatico';
 comment on column pacchetti_meeting.cosa_include is 'Sala, coffee break, pranzo, dotazioni';
+comment on column pacchetti_meeting.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table pacchetti_meeting enable row level security;
 
 create table ristoranti (
@@ -1421,7 +1583,33 @@ create table ristoranti (
   creato_da text,
   aggiornato_il timestamptz not null default now(),
   aggiornato_da text,
-  struttura_id uuid,
+  nome text,
+  gestore_fornitore_id uuid,
+  descrizione_preventivo text,
+  descrizione_interna text,
+  indirizzo text,
+  cap text,
+  citta text,
+  provincia text,
+  regione text,
+  paese text,
+  coordinate point,
+  zona text,
+  aeroporto_riferimento text,
+  distanza_aeroporto_km numeric,
+  stazione_riferimento text,
+  distanza_stazione_km numeric,
+  distanza_centro_km numeric,
+  parcheggio_posti numeric,
+  parcheggio_bus boolean,
+  ztl boolean,
+  accesso_carico_scarico text,
+  accessibilita_disabili text check (accessibilita_disabili in ('totale', 'parziale', 'no')),
+  sito_web text,
+  cartella_drive text,
+  ultimo_sopralluogo date,
+  sopralluogo_da text,
+  valutazione_interna numeric,
   cucina text[],
   fascia_prezzo text check (fascia_prezzo in ('€', '€€', '€€€', '€€€€')),
   prezzo_medio_persona numeric(12,2),
@@ -1435,9 +1623,10 @@ create table ristoranti (
   riconoscimenti text,
   dehors boolean,
   musica_ammessa boolean,
+  rev integer not null default 1,
   unique (codice)
 );
-comment on table ristoranti is 'RISTORAZIONE · Scheda ristorante collegata alla struttura. Le sale private sono spazi';
+comment on table ristoranti is 'RISTORAZIONE · Scheda ristorante. Le sale private sono spazi';
 comment on column ristoranti.id is 'chiave interna';
 comment on column ristoranti.codice is 'Codice leggibile per prefisso di tabella';
 comment on column ristoranti.stato_scheda is 'Stato della scheda nel suo insieme. Diventa ''da aggiornare'' se una voce validata scade o cambia';
@@ -1452,9 +1641,36 @@ comment on column ristoranti.creato_il is 'Tracciamento automatico';
 comment on column ristoranti.creato_da is 'Tracciamento automatico';
 comment on column ristoranti.aggiornato_il is 'Tracciamento automatico';
 comment on column ristoranti.aggiornato_da is 'Tracciamento automatico';
+comment on column ristoranti.nome is 'Nome commerciale';
+comment on column ristoranti.gestore_fornitore_id is 'Chi la gestisce e ci fattura';
+comment on column ristoranti.descrizione_preventivo is 'Testo breve pronto per proposte e preventivi al cliente';
+comment on column ristoranti.descrizione_interna is 'Cosa sappiamo noi: pregi, difetti, trucchi';
+comment on column ristoranti.indirizzo is 'Via e numero';
+comment on column ristoranti.cap is 'Localizzazione, una colonna ciascuno';
+comment on column ristoranti.citta is 'Localizzazione, una colonna ciascuno';
+comment on column ristoranti.provincia is 'Localizzazione, una colonna ciascuno';
+comment on column ristoranti.regione is 'Localizzazione, una colonna ciascuno';
+comment on column ristoranti.paese is 'Localizzazione, una colonna ciascuno';
+comment on column ristoranti.coordinate is 'Latitudine e longitudine per mappa e distanze';
+comment on column ristoranti.zona is 'Zona riconoscibile';
+comment on column ristoranti.aeroporto_riferimento is 'Aeroporto più comodo e distanza';
+comment on column ristoranti.distanza_aeroporto_km is 'Aeroporto più comodo e distanza';
+comment on column ristoranti.stazione_riferimento is 'Stazione più comoda e distanza';
+comment on column ristoranti.distanza_stazione_km is 'Stazione più comoda e distanza';
+comment on column ristoranti.distanza_centro_km is 'Distanza dal centro città';
+comment on column ristoranti.parcheggio_posti is 'Posti auto e se i bus GT possono arrivare e sostare';
+comment on column ristoranti.parcheggio_bus is 'Posti auto e se i bus GT possono arrivare e sostare';
+comment on column ristoranti.ztl is 'In zona a traffico limitato: servono permessi per mezzi e carichi';
+comment on column ristoranti.accesso_carico_scarico is 'Da dove si scarica, dimensioni passaggi, montacarichi, orari consentiti';
+comment on column ristoranti.accessibilita_disabili is 'Accessibilità generale';
+comment on column ristoranti.cartella_drive is 'Cartella Drive con foto, planimetrie, listini';
+comment on column ristoranti.ultimo_sopralluogo is 'Chi l''ha visto dal vivo e quando';
+comment on column ristoranti.sopralluogo_da is 'Chi l''ha visto dal vivo e quando';
+comment on column ristoranti.valutazione_interna is 'Quanto ci siamo trovati bene';
 comment on column ristoranti.esclusiva_possibile is 'Si può chiudere il locale per noi e a che minimo';
 comment on column ristoranti.minimo_spesa_esclusiva is 'Si può chiudere il locale per noi e a che minimo';
 comment on column ristoranti.riconoscimenti is 'Guide e premi';
+comment on column ristoranti.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table ristoranti enable row level security;
 
 create table catering (
@@ -1481,7 +1697,8 @@ create table catering (
   cucina_mobile boolean,
   include_personale boolean,
   include_attrezzatura boolean,
-  strutture_convenzionate uuid[],
+  location_convenzionate uuid[],
+  rev integer not null default 1,
   unique (codice)
 );
 comment on table catering is 'RISTORAZIONE · Scheda del fornitore di catering: cosa sa fare e dove arriva';
@@ -1504,7 +1721,8 @@ comment on column catering.costo_trasferta is 'Fin dove arriva e quanto costa us
 comment on column catering.cucina_mobile is 'Può cucinare in location senza cucina';
 comment on column catering.include_personale is 'Camerieri, tavoli, tovagliato, stoviglie compresi';
 comment on column catering.include_attrezzatura is 'Camerieri, tavoli, tovagliato, stoviglie compresi';
-comment on column catering.strutture_convenzionate is 'Location dove è già accreditato o in esclusiva';
+comment on column catering.location_convenzionate is 'Location dove è già accreditato o in esclusiva';
+comment on column catering.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table catering enable row level security;
 
 create table menu (
@@ -1523,7 +1741,7 @@ create table menu (
   aggiornato_il timestamptz not null default now(),
   aggiornato_da text,
   fornitore_id uuid,
-  struttura_id uuid,
+  ristorante_id uuid,
   nome text,
   tipo_servizio text check (tipo_servizio in ('coffee break', 'light lunch', 'buffet', 'cena placé', 'cocktail', 'finger food', 'brunch')),
   portate text,
@@ -1534,6 +1752,7 @@ create table menu (
   opzioni_dietetiche text[],
   valido_dal date,
   valido_al date,
+  rev integer not null default 1,
   unique (codice)
 );
 comment on table menu is 'RISTORAZIONE · Proposte di menu di ristoranti e catering';
@@ -1552,9 +1771,10 @@ comment on column menu.creato_da is 'Tracciamento automatico';
 comment on column menu.aggiornato_il is 'Tracciamento automatico';
 comment on column menu.aggiornato_da is 'Tracciamento automatico';
 comment on column menu.fornitore_id is 'Chi lo propone (catering) o dove (ristorante)';
-comment on column menu.struttura_id is 'Chi lo propone (catering) o dove (ristorante)';
+comment on column menu.ristorante_id is 'Chi lo propone (catering) o dove (ristorante)';
 comment on column menu.portate is 'Composizione del menu';
 comment on column menu.opzioni_dietetiche is 'Varianti disponibili';
+comment on column menu.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table menu enable row level security;
 
 create table fornitori (
@@ -1589,6 +1809,7 @@ create table fornitori (
   referente_interno_id text,
   ultimo_utilizzo date,
   numero_commesse numeric,
+  rev integer not null default 1,
   unique (codice)
 );
 comment on table fornitori is 'FORNITORI · Profilo fornitore. Si appoggia all''anagrafica aziende già esistente (ORGANIZZAZIONI: ragione sociale, P.IVA, SDI, PEC)';
@@ -1620,6 +1841,7 @@ comment on column fornitori.lingue is 'Lingue parlate dallo staff';
 comment on column fornitori.referente_interno_id is 'Chi di noi tiene il rapporto';
 comment on column fornitori.ultimo_utilizzo is 'Calcolati dalle commesse';
 comment on column fornitori.numero_commesse is 'Calcolati dalle commesse';
+comment on column fornitori.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table fornitori enable row level security;
 
 create table fornitori_aree (
@@ -1643,6 +1865,7 @@ create table fornitori_aree (
   citta text,
   raggio_km numeric,
   sede_operativa boolean,
+  rev integer not null default 1,
   unique (codice)
 );
 comment on table fornitori_aree is 'FORNITORI · Dove opera un fornitore (fondamentale per DMC, transfer, catering, personale)';
@@ -1665,6 +1888,7 @@ comment on column fornitori_aree.regione is 'Area coperta: anche solo paese o re
 comment on column fornitori_aree.citta is 'Area coperta: anche solo paese o regione';
 comment on column fornitori_aree.raggio_km is 'Se lavora in un raggio da una città';
 comment on column fornitori_aree.sede_operativa is 'Ha una base qui (niente trasferta)';
+comment on column fornitori_aree.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table fornitori_aree enable row level security;
 
 create table offerte (
@@ -1699,6 +1923,7 @@ create table offerte (
   articolo_equivalente_id text,
   foto uuid,
   scheda_tecnica uuid,
+  rev integer not null default 1,
   unique (codice)
 );
 comment on table offerte is 'FORNITORI · Il catalogo di tutto ciò che un fornitore vende, con prezzo. È la fonte delle voci di preventivo per service, allestimenti, grafiche, gadget, biglietteria, segreteria, art e personale da agenzia';
@@ -1722,6 +1947,7 @@ comment on column offerte.costo_netto is 'Quanto lo paghiamo noi';
 comment on column offerte.quantita_min is 'Ordine minimo';
 comment on column offerte.quantita_disponibile is 'Quanti ne ha, se si sa';
 comment on column offerte.articolo_equivalente_id is 'Se è un noleggio da terzi di qualcosa che abbiamo anche in magazzino';
+comment on column offerte.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table offerte enable row level security;
 
 create table accordi_fornitore (
@@ -1749,6 +1975,7 @@ create table accordi_fornitore (
   valido_al date,
   condizioni text,
   contratto uuid,
+  rev integer not null default 1,
   unique (codice)
 );
 comment on table accordi_fornitore is 'FORNITORI · Partnership e convenzioni: sconti, commissioni, rebate a nostro favore, esclusive';
@@ -1767,6 +1994,7 @@ comment on column accordi_fornitore.creato_da is 'Tracciamento automatico';
 comment on column accordi_fornitore.aggiornato_il is 'Tracciamento automatico';
 comment on column accordi_fornitore.aggiornato_da is 'Tracciamento automatico';
 comment on column accordi_fornitore.codice_convenzione is 'Codice da citare quando si prenota';
+comment on column accordi_fornitore.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table accordi_fornitore enable row level security;
 
 create table veicoli (
@@ -1799,6 +2027,7 @@ create table veicoli (
   vano_dimensioni text,
   sponda_idraulica boolean,
   patente_richiesta text check (patente_richiesta in ('B', 'C', 'D', 'CE')),
+  rev integer not null default 1,
   unique (codice)
 );
 comment on table veicoli is 'TRASPORTI · Tipi di veicolo disponibili: i nostri furgoni e le flotte dei fornitori (una riga per tipo e fornitore)';
@@ -1827,6 +2056,7 @@ comment on column veicoli.portata_kg is 'Per i mezzi da carico';
 comment on column veicoli.vano_dimensioni is 'Per i mezzi da carico';
 comment on column veicoli.sponda_idraulica is 'Per i mezzi da carico';
 comment on column veicoli.patente_richiesta is 'Per i nostri mezzi';
+comment on column veicoli.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table veicoli enable row level security;
 
 create table tariffe_trasporto (
@@ -1861,6 +2091,7 @@ create table tariffe_trasporto (
   vitto_autista_incluso boolean,
   valido_dal date,
   valido_al date,
+  rev integer not null default 1,
   unique (codice)
 );
 comment on table tariffe_trasporto is 'TRASPORTI · Prezzi dei fornitori di transfer e trasporto';
@@ -1880,6 +2111,7 @@ comment on column tariffe_trasporto.aggiornato_il is 'Tracciamento automatico';
 comment on column tariffe_trasporto.aggiornato_da is 'Tracciamento automatico';
 comment on column tariffe_trasporto.tratta_da is 'Per i transfer a tratta fissa';
 comment on column tariffe_trasporto.tratta_a is 'Per i transfer a tratta fissa';
+comment on column tariffe_trasporto.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table tariffe_trasporto enable row level security;
 
 create table esperienze (
@@ -1907,7 +2139,7 @@ create table esperienze (
   interno_esterno text,
   dipende_meteo boolean,
   piano_b text,
-  struttura_id uuid,
+  location_id uuid,
   citta text,
   mesi_disponibili text[],
   lingue text[],
@@ -1919,6 +2151,7 @@ create table esperienze (
   preavviso_giorni numeric,
   foto uuid,
   video uuid,
+  rev integer not null default 1,
   unique (codice)
 );
 comment on table esperienze is 'ESPERIENZE E TALENT · Ogni attività vendibile: teambuilding, tour, show, workshop';
@@ -1936,9 +2169,10 @@ comment on column esperienze.creato_il is 'Tracciamento automatico';
 comment on column esperienze.creato_da is 'Tracciamento automatico';
 comment on column esperienze.aggiornato_il is 'Tracciamento automatico';
 comment on column esperienze.aggiornato_da is 'Tracciamento automatico';
-comment on column esperienze.struttura_id is 'Dove si svolge (se fisso)';
+comment on column esperienze.location_id is 'Dove si svolge (se fisso)';
 comment on column esperienze.citta is 'Dove si svolge (se fisso)';
 comment on column esperienze.mesi_disponibili is 'Stagionalità';
+comment on column esperienze.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table esperienze enable row level security;
 
 create table talent (
@@ -1978,6 +2212,7 @@ create table talent (
   limitazioni text,
   ultima_collaborazione date,
   valutazione numeric,
+  rev integer not null default 1,
   unique (codice)
 );
 comment on table talent is 'ESPERIENZE E TALENT · Speaker, presentatori, artisti, musicisti, comici, performer, influencer';
@@ -2005,6 +2240,7 @@ comment on column talent.cachet_note is 'IVA, agibilità, rimborsi, diritti';
 comment on column talent.durata_intervento_min is 'Durata tipica e persone nella formazione';
 comment on column talent.elementi is 'Durata tipica e persone nella formazione';
 comment on column talent.limitazioni is 'Brand concorrenti, temi esclusi, esclusive';
+comment on column talent.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table talent enable row level security;
 
 create table dmc (
@@ -2030,6 +2266,7 @@ create table dmc (
   modalita_prezzo text check (modalita_prezzo in ('netto + nostro ricarico', 'commissionabile', 'fee di servizio')),
   valuta text,
   referenze text,
+  rev integer not null default 1,
   unique (codice)
 );
 comment on table dmc is 'ESPERIENZE E TALENT · Scheda del DMC (agenzia locale a destinazione). Le destinazioni coperte sono in fornitori_aree';
@@ -2050,6 +2287,7 @@ comment on column dmc.aggiornato_da is 'Tracciamento automatico';
 comment on column dmc.licenza is 'Licenza agenzia e associazioni di categoria';
 comment on column dmc.associazioni is 'Licenza agenzia e associazioni di categoria';
 comment on column dmc.referenze is 'Eventi fatti, clienti';
+comment on column dmc.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table dmc enable row level security;
 
 create table persone_lingue (
@@ -2070,6 +2308,7 @@ create table persone_lingue (
   persona_id text,
   lingua text,
   livello text check (livello in ('A2', 'B1', 'B2', 'C1', 'C2', 'madrelingua')),
+  rev integer not null default 1,
   unique (codice)
 );
 comment on table persone_lingue is 'PERSONE · Lingue e livello, una riga per lingua';
@@ -2087,6 +2326,7 @@ comment on column persone_lingue.creato_il is 'Tracciamento automatico';
 comment on column persone_lingue.creato_da is 'Tracciamento automatico';
 comment on column persone_lingue.aggiornato_il is 'Tracciamento automatico';
 comment on column persone_lingue.aggiornato_da is 'Tracciamento automatico';
+comment on column persone_lingue.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table persone_lingue enable row level security;
 
 create table servizi_digitali (
@@ -2113,6 +2353,7 @@ create table servizi_digitali (
   setup_giorni numeric,
   integrazioni text,
   demo_link text,
+  rev integer not null default 1,
   unique (codice)
 );
 comment on table servizi_digitali is 'MAGAZZINO E SERVIZI DIGITALI · Inventario dei servizi digitali (nostri o di fornitori)';
@@ -2132,6 +2373,7 @@ comment on column servizi_digitali.aggiornato_il is 'Tracciamento automatico';
 comment on column servizi_digitali.aggiornato_da is 'Tracciamento automatico';
 comment on column servizi_digitali.setup_giorni is 'Tempo minimo di preparazione';
 comment on column servizi_digitali.integrazioni is 'Con cosa si collega';
+comment on column servizi_digitali.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table servizi_digitali enable row level security;
 
 create table documenti (
@@ -2149,7 +2391,7 @@ create table documenti (
   creato_da text,
   aggiornato_il timestamptz not null default now(),
   aggiornato_da text,
-  oggetto_tipo text check (oggetto_tipo in ('fornitore', 'struttura', 'persona', 'veicolo', 'Chedo', 'Nakama', 'commessa')),
+  oggetto_tipo text check (oggetto_tipo in ('fornitore', 'location', 'hotel', 'ristorante', 'persona', 'veicolo', 'Chedo', 'Nakama', 'commessa')),
   oggetto_id text,
   tipo text check (tipo in ('DURC', 'visura camerale', 'polizza RC', 'polizza all risk', 'agibilità', 'CPI antincendio', 'ISO', 'HACCP', 'licenza NCC', 'suolo pubblico', 'SIAE', 'commissione di vigilanza', 'formazione sicurezza', 'idoneità medica', 'DVR', 'altro')),
   numero text,
@@ -2159,9 +2401,10 @@ create table documenti (
   massimale numeric(12,2),
   file uuid,
   stato text check (stato in ('valido', 'in scadenza', 'scaduto', 'mancante')),
+  rev integer not null default 1,
   unique (codice)
 );
-comment on table documenti is 'DOCUMENTI E VALIDAZIONE · Certificazioni, permessi, assicurazioni con scadenza, per fornitori, strutture, persone, veicoli, noi stessi o una commessa';
+comment on table documenti is 'DOCUMENTI E VALIDAZIONE · Certificazioni, permessi, assicurazioni con scadenza, per fornitori, location, hotel, ristoranti, persone, veicoli, noi stessi o una commessa';
 comment on column documenti.id is 'chiave interna';
 comment on column documenti.codice is 'Codice leggibile per prefisso di tabella';
 comment on column documenti.stato_scheda is 'Stato della scheda nel suo insieme. Diventa ''da aggiornare'' se una voce validata scade o cambia';
@@ -2180,6 +2423,7 @@ comment on column documenti.oggetto_tipo is 'A chi appartiene il documento';
 comment on column documenti.oggetto_id is 'A chi appartiene il documento';
 comment on column documenti.massimale is 'Per le assicurazioni';
 comment on column documenti.stato is 'In scadenza = entro 30 giorni (soglia in IMPOSTAZIONI)';
+comment on column documenti.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table documenti enable row level security;
 
 create table allegati (
@@ -2205,6 +2449,7 @@ create table allegati (
   storage_path text,
   data_documento date,
   utilizzabile_con_cliente boolean,
+  rev integer not null default 1,
   unique (codice)
 );
 comment on table allegati is 'DOCUMENTI E VALIDAZIONE · Foto, planimetrie, listini, rider, brochure di qualsiasi scheda. Il file sta su Drive (o Storage di Supabase per le foto)';
@@ -2228,6 +2473,7 @@ comment on column allegati.drive_url is 'Dove sta il file';
 comment on column allegati.storage_path is 'Dove sta il file';
 comment on column allegati.data_documento is 'Es. data del listino';
 comment on column allegati.utilizzabile_con_cliente is 'Si può mettere nelle proposte (diritti foto, riservatezza)';
+comment on column allegati.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table allegati enable row level security;
 
 create table validazioni (
@@ -2256,6 +2502,7 @@ create table validazioni (
   validato_il timestamptz,
   valido_fino date,
   nota text,
+  rev integer not null default 1,
   unique (codice)
 );
 comment on table validazioni is 'DOCUMENTI E VALIDAZIONE · Una riga per ogni singola voce validata: chi, quando, da quale fonte, fino a quando. Se il valore cambia, la voce torna ''da verificare''';
@@ -2278,6 +2525,7 @@ comment on column validazioni.record_id is 'Quale voce di quale scheda';
 comment on column validazioni.colonna is 'Quale voce di quale scheda';
 comment on column validazioni.valore_validato is 'Copia del valore al momento della validazione';
 comment on column validazioni.valido_fino is 'Per prezzi e dati che scadono';
+comment on column validazioni.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table validazioni enable row level security;
 
 create table richieste_censimento (
@@ -2306,6 +2554,7 @@ create table richieste_censimento (
   stato text check (stato in ('nuova', 'in censimento', 'censita', 'scartata')),
   assegnata_a text,
   scheda_creata text,
+  rev integer not null default 1,
   unique (codice)
 );
 comment on table richieste_censimento is 'DOCUMENTI E VALIDAZIONE · Quando un PM, creando una richiesta, non trova un hotel o un fornitore nel database, ne chiede il censimento';
@@ -2329,6 +2578,7 @@ comment on column richieste_censimento.link is 'Quello che il PM sa';
 comment on column richieste_censimento.commessa_id is 'Per quale progetto serve';
 comment on column richieste_censimento.assegnata_a is 'Chi la censisce';
 comment on column richieste_censimento.scheda_creata is 'La scheda nata dal censimento';
+comment on column richieste_censimento.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table richieste_censimento enable row level security;
 
 
@@ -2353,7 +2603,8 @@ create table piano_commessa (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table piano_commessa is 'Parametri da cui si generano le fasi della commessa';
 comment on column piano_commessa.commessa_id is 'una riga per commessa';
@@ -2363,6 +2614,7 @@ comment on column piano_commessa.prove_ore is 'ore di prove e convocazione prima
 comment on column piano_commessa.smo_ore is 'ore di smontaggio dopo la fine';
 comment on column piano_commessa.magazzino_id is 'magazzino di partenza';
 comment on column piano_commessa.viaggio_min is 'minuti di viaggio fino alla location';
+comment on column piano_commessa.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table piano_commessa enable row level security;
 
 create table fasi (
@@ -2377,11 +2629,13 @@ create table fasi (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table fasi is 'Fasi generate dal piano: il calendario delle persone dipende da queste';
 comment on column fasi.giorno_n is '1, 2… se la fase dura più giorni';
 comment on column fasi.modificata_a_mano is 'sì = non si rigenera dai parametri';
+comment on column fasi.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table fasi enable row level security;
 
 create table fabbisogni (
@@ -2396,13 +2650,15 @@ create table fabbisogni (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table fabbisogni is 'Ruoli che servono alla commessa, con le fasi in cui servono e i posti';
 comment on column fabbisogni.ruolo is 'es. Fonico';
 comment on column fabbisogni.funzione is 'funzione del personale richiesta';
 comment on column fabbisogni.riga_preventivo_id is 'se nasce da una voce di personale';
 comment on column fabbisogni.competenze is 'competenze richieste';
+comment on column fabbisogni.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table fabbisogni enable row level security;
 
 create table alert_regole (
@@ -2418,11 +2674,13 @@ create table alert_regole (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table alert_regole is 'Regole degli alert di piattaforma';
 comment on column alert_regole.nome is 'es. Persone mancanti';
 comment on column alert_regole.giorni_prima is 'es. 30, 10';
+comment on column alert_regole.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table alert_regole enable row level security;
 
 create table alert (
@@ -2436,9 +2694,11 @@ create table alert (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table alert is 'Alert generati sulle commesse';
+comment on column alert.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table alert enable row level security;
 
 create table commessa_aree (
@@ -2453,11 +2713,13 @@ create table commessa_aree (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table commessa_aree is 'Aree attive in una commessa, con responsabile e visibilità';
 comment on column commessa_aree.area is 'categoria del database: location, hotel, catering, service…';
 comment on column commessa_aree.visibile_a is 'ruoli o persone che vedono l''area';
+comment on column commessa_aree.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table commessa_aree enable row level security;
 
 create table richieste_offerta (
@@ -2472,12 +2734,14 @@ create table richieste_offerta (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table richieste_offerta is 'Richieste d''offerta ai fornitori, per area';
 comment on column richieste_offerta.rdo_id is 'codice nell''oggetto della mail, es. D26-007 · RDO-03';
 comment on column richieste_offerta.testo is 'bozza scritta dall''AI e rivista';
 comment on column richieste_offerta.casella is 'default ordini@nakamastudio.it';
+comment on column richieste_offerta.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table richieste_offerta enable row level security;
 
 create table rdo_fornitori (
@@ -2494,12 +2758,14 @@ create table rdo_fornitori (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table rdo_fornitori is 'Ogni fornitore interpellato in una richiesta d''offerta';
 comment on column rdo_fornitori.gmail_thread_id is 'per agganciare le risposte';
 comment on column rdo_fornitori.file_id is 'preventivo del fornitore salvato su Drive';
 comment on column rdo_fornitori.esito_comunicato_il is 'data della risposta positiva o negativa';
+comment on column rdo_fornitori.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table rdo_fornitori enable row level security;
 
 create table giri (
@@ -2512,9 +2778,11 @@ create table giri (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table giri is 'Giri di trasporto composti liberamente dal magazzino';
+comment on column giri.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table giri enable row level security;
 
 create table tappe (
@@ -2522,7 +2790,8 @@ create table tappe (
   giro_id text,
   ordine numeric,
   magazzino_id text,
-  struttura_id uuid,
+  location_id uuid,
+  hotel_id uuid,
   azione text check (azione in ('carico', 'scarico', 'ritiro', 'consegna')),
   commessa_id text,
   prenotazione_id text,
@@ -2531,12 +2800,15 @@ create table tappe (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table tappe is 'Tappe di un giro: una tappa può servire più commesse';
 comment on column tappe.magazzino_id is 'se la tappa è un magazzino';
-comment on column tappe.struttura_id is 'se la tappa è una location';
+comment on column tappe.location_id is 'se la tappa è una location';
+comment on column tappe.hotel_id is 'se la tappa è un hotel';
 comment on column tappe.prenotazione_id is 'materiale movimentato';
+comment on column tappe.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table tappe enable row level security;
 
 create table logistica_persona (
@@ -2549,7 +2821,7 @@ create table logistica_persona (
   ritorno_il timestamptz,
   ritorno_mezzo text check (ritorno_mezzo in ('volo', 'treno', 'auto', 'furgone', 'altro')),
   ritorno_riferimento text,
-  hotel_struttura_id uuid,
+  hotel_id uuid,
   notti numeric,
   transfer text,
   stato text check (stato in ('da organizzare', 'richiesto', 'confermato')),
@@ -2557,10 +2829,12 @@ create table logistica_persona (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table logistica_persona is 'Viaggio, hotel e transfer di una persona confermata su una commessa';
 comment on column logistica_persona.andata_riferimento is 'biglietto o PNR';
+comment on column logistica_persona.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table logistica_persona enable row level security;
 
 create table preventivi_righe (
@@ -2583,7 +2857,8 @@ create table preventivi_righe (
   creato_il timestamptz not null default now(),
   creato_da text,
   aggiornato_il timestamptz not null default now(),
-  aggiornato_da text
+  aggiornato_da text,
+  rev integer not null default 1
 );
 comment on table preventivi_righe is 'Voci del preventivo di commessa, ognuna con il suo regime IVA';
 comment on column preventivi_righe.sezione is 'es. AUDIO, LOCATION';
@@ -2593,7 +2868,46 @@ comment on column preventivi_righe.opzionale is 'fuori dal totale';
 comment on column preventivi_righe.magazzino_id is 'per le voci di inventario';
 comment on column preventivi_righe.aliquota_iva is '22, 10, 4, 0';
 comment on column preventivi_righe.ritenuta is 'per le prestazioni soggette';
+comment on column preventivi_righe.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table preventivi_righe enable row level security;
+
+create table dispositivi (
+  dispositivo_id text primary key,
+  persona_id text,
+  nome text,
+  tipo text check (tipo in ('computer', 'telefono', 'tablet')),
+  ultimo_sync timestamptz,
+  modifiche_in_attesa numeric,
+  attivo boolean not null default true,
+  creato_il timestamptz not null default now(),
+  creato_da text,
+  aggiornato_il timestamptz not null default now(),
+  aggiornato_da text,
+  rev integer not null default 1
+);
+comment on table dispositivi is 'Computer, telefoni e tablet da cui ogni persona usa l''Hub';
+comment on column dispositivi.dispositivo_id is 'generato dall''app al primo accesso, inviato in ogni richiesta (header x-hub-device)';
+comment on column dispositivi.nome is 'es. MacBook di Sara, iPhone magazzino';
+comment on column dispositivi.ultimo_sync is 'ultima volta che ha ricevuto gli aggiornamenti';
+comment on column dispositivi.modifiche_in_attesa is 'modifiche fatte offline non ancora inviate';
+comment on column dispositivi.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
+alter table dispositivi enable row level security;
+
+create table modifiche (
+  id bigint generated always as identity primary key,
+  tabella text,
+  record_id text,
+  operazione text check (operazione in ('insert', 'update', 'delete')),
+  differenze jsonb,
+  utente text,
+  dispositivo text,
+  quando timestamptz
+);
+comment on table modifiche is 'Registro di ogni modifica, scritto in automatico dal database: chi, da quale dispositivo, cosa è cambiato';
+comment on column modifiche.differenze is 'per gli update: {campo: [prima, dopo]}; per insert e delete: il record';
+comment on column modifiche.utente is 'id dell''utente Supabase';
+comment on column modifiche.dispositivo is 'dispositivo_id dall''header x-hub-device';
+alter table modifiche enable row level security;
 
 
 -- ════════ CHIAVI ESTERNE ════════
@@ -2652,7 +2966,7 @@ alter table commesse add constraint commesse_cliente_org_id_fk foreign key (clie
 alter table commesse add constraint commesse_committente_org_id_fk foreign key (committente_org_id) references organizzazioni (org_id);
 alter table commesse add constraint commesse_agenzia_org_id_fk foreign key (agenzia_org_id) references organizzazioni (org_id);
 alter table commesse add constraint commesse_segnalazione_id_fk foreign key (segnalazione_id) references segnalazioni (segnalazione_id);
-alter table commesse add constraint commesse_location_id_fk foreign key (location_id) references strutture (id);
+alter table commesse add constraint commesse_location_id_fk foreign key (location_id) references location (id);
 alter table commesse add constraint commesse_pm_persona_id_fk foreign key (pm_persona_id) references persone (persona_id);
 alter table commesse add constraint commesse_backup_persona_id_fk foreign key (backup_persona_id) references persone (persona_id);
 alter table commesse add constraint commesse_contratto_quadro_id_fk foreign key (contratto_quadro_id) references contratti_quadro (cq_id);
@@ -2681,7 +2995,7 @@ alter table impegni add constraint impegni_confermato_da_fk foreign key (conferm
 alter table storico_stati add constraint storico_stati_commessa_id_fk foreign key (commessa_id) references commesse (commessa_id);
 alter table storico_stati add constraint storico_stati_persona_id_fk foreign key (persona_id) references persone (persona_id);
 alter table file add constraint file_commessa_id_fk foreign key (commessa_id) references commesse (commessa_id);
-alter table file add constraint file_location_id_fk foreign key (location_id) references strutture (id);
+alter table file add constraint file_location_id_fk foreign key (location_id) references location (id);
 alter table file add constraint file_creato_da_fk foreign key (creato_da) references persone (persona_id);
 alter table file add constraint file_aggiornato_da_fk foreign key (aggiornato_da) references persone (persona_id);
 alter table riassunti add constraint riassunti_creato_da_fk foreign key (creato_da) references persone (persona_id);
@@ -2690,7 +3004,7 @@ alter table proposte_ai add constraint proposte_ai_fonte_file_id_fk foreign key 
 alter table proposte_ai add constraint proposte_ai_custode_persona_id_fk foreign key (custode_persona_id) references persone (persona_id);
 alter table proposte_ai add constraint proposte_ai_creato_da_fk foreign key (creato_da) references persone (persona_id);
 alter table proposte_ai add constraint proposte_ai_aggiornato_da_fk foreign key (aggiornato_da) references persone (persona_id);
-alter table magazzini add constraint magazzini_location_id_fk foreign key (location_id) references strutture (id);
+alter table magazzini add constraint magazzini_location_id_fk foreign key (location_id) references location (id);
 alter table magazzini add constraint magazzini_responsabile_persona_id_fk foreign key (responsabile_persona_id) references persone (persona_id);
 alter table magazzini add constraint magazzini_creato_da_fk foreign key (creato_da) references persone (persona_id);
 alter table magazzini add constraint magazzini_aggiornato_da_fk foreign key (aggiornato_da) references persone (persona_id);
@@ -2775,7 +3089,7 @@ alter table grafiche add constraint grafiche_fornitore_org_id_fk foreign key (fo
 alter table grafiche add constraint grafiche_creato_da_fk foreign key (creato_da) references persone (persona_id);
 alter table grafiche add constraint grafiche_aggiornato_da_fk foreign key (aggiornato_da) references persone (persona_id);
 alter table sicurezza add constraint sicurezza_commessa_id_fk foreign key (commessa_id) references commesse (commessa_id);
-alter table sicurezza add constraint sicurezza_location_id_fk foreign key (location_id) references strutture (id);
+alter table sicurezza add constraint sicurezza_location_id_fk foreign key (location_id) references location (id);
 alter table sicurezza add constraint sicurezza_file_id_fk foreign key (file_id) references file (file_id);
 alter table sicurezza add constraint sicurezza_responsabile_persona_id_fk foreign key (responsabile_persona_id) references persone (persona_id);
 alter table sicurezza add constraint sicurezza_creato_da_fk foreign key (creato_da) references persone (persona_id);
@@ -2788,13 +3102,16 @@ alter table timesheet add constraint timesheet_aggiornato_da_fk foreign key (agg
 alter table timesheet add constraint timesheet_impegno_id_fk foreign key (impegno_id) references impegni (impegno_id);
 alter table todo_clickup add constraint todo_clickup_commessa_id_fk foreign key (commessa_id) references commesse (commessa_id);
 alter table todo_clickup add constraint todo_clickup_assegnatario_persona_id_fk foreign key (assegnatario_persona_id) references persone (persona_id);
-alter table strutture add constraint strutture_creato_da_fk foreign key (creato_da) references persone (persona_id);
-alter table strutture add constraint strutture_aggiornato_da_fk foreign key (aggiornato_da) references persone (persona_id);
-alter table strutture add constraint strutture_gestore_fornitore_id_fk foreign key (gestore_fornitore_id) references fornitori (id);
-alter table strutture add constraint strutture_sopralluogo_da_fk foreign key (sopralluogo_da) references persone (persona_id);
+alter table location add constraint location_creato_da_fk foreign key (creato_da) references persone (persona_id);
+alter table location add constraint location_aggiornato_da_fk foreign key (aggiornato_da) references persone (persona_id);
+alter table location add constraint location_gestore_fornitore_id_fk foreign key (gestore_fornitore_id) references fornitori (id);
+alter table location add constraint location_sopralluogo_da_fk foreign key (sopralluogo_da) references persone (persona_id);
+alter table location add constraint location_magazzino_id_fk foreign key (magazzino_id) references magazzini (magazzino_id);
 alter table spazi add constraint spazi_creato_da_fk foreign key (creato_da) references persone (persona_id);
 alter table spazi add constraint spazi_aggiornato_da_fk foreign key (aggiornato_da) references persone (persona_id);
-alter table spazi add constraint spazi_struttura_id_fk foreign key (struttura_id) references strutture (id);
+alter table spazi add constraint spazi_location_id_fk foreign key (location_id) references location (id);
+alter table spazi add constraint spazi_hotel_id_fk foreign key (hotel_id) references hotel (id);
+alter table spazi add constraint spazi_ristorante_id_fk foreign key (ristorante_id) references ristoranti (id);
 alter table spazi add constraint spazi_spazio_padre_id_fk foreign key (spazio_padre_id) references spazi (id);
 alter table spazi add constraint spazi_planimetria_fk foreign key (planimetria) references allegati (id);
 alter table spazi_capienze add constraint spazi_capienze_creato_da_fk foreign key (creato_da) references persone (persona_id);
@@ -2802,7 +3119,8 @@ alter table spazi_capienze add constraint spazi_capienze_aggiornato_da_fk foreig
 alter table spazi_capienze add constraint spazi_capienze_spazio_id_fk foreign key (spazio_id) references spazi (id);
 alter table hotel add constraint hotel_creato_da_fk foreign key (creato_da) references persone (persona_id);
 alter table hotel add constraint hotel_aggiornato_da_fk foreign key (aggiornato_da) references persone (persona_id);
-alter table hotel add constraint hotel_struttura_id_fk foreign key (struttura_id) references strutture (id);
+alter table hotel add constraint hotel_gestore_fornitore_id_fk foreign key (gestore_fornitore_id) references fornitori (id);
+alter table hotel add constraint hotel_sopralluogo_da_fk foreign key (sopralluogo_da) references persone (persona_id);
 alter table hotel add constraint hotel_contatto_gruppi_id_fk foreign key (contatto_gruppi_id) references contatti (contatto_id);
 alter table hotel add constraint hotel_contatto_eventi_id_fk foreign key (contatto_eventi_id) references contatti (contatto_id);
 alter table camere_tipologie add constraint camere_tipologie_creato_da_fk foreign key (creato_da) references persone (persona_id);
@@ -2817,14 +3135,15 @@ alter table pacchetti_meeting add constraint pacchetti_meeting_aggiornato_da_fk 
 alter table pacchetti_meeting add constraint pacchetti_meeting_hotel_id_fk foreign key (hotel_id) references hotel (id);
 alter table ristoranti add constraint ristoranti_creato_da_fk foreign key (creato_da) references persone (persona_id);
 alter table ristoranti add constraint ristoranti_aggiornato_da_fk foreign key (aggiornato_da) references persone (persona_id);
-alter table ristoranti add constraint ristoranti_struttura_id_fk foreign key (struttura_id) references strutture (id);
+alter table ristoranti add constraint ristoranti_gestore_fornitore_id_fk foreign key (gestore_fornitore_id) references fornitori (id);
+alter table ristoranti add constraint ristoranti_sopralluogo_da_fk foreign key (sopralluogo_da) references persone (persona_id);
 alter table catering add constraint catering_creato_da_fk foreign key (creato_da) references persone (persona_id);
 alter table catering add constraint catering_aggiornato_da_fk foreign key (aggiornato_da) references persone (persona_id);
 alter table catering add constraint catering_fornitore_id_fk foreign key (fornitore_id) references fornitori (id);
 alter table menu add constraint menu_creato_da_fk foreign key (creato_da) references persone (persona_id);
 alter table menu add constraint menu_aggiornato_da_fk foreign key (aggiornato_da) references persone (persona_id);
 alter table menu add constraint menu_fornitore_id_fk foreign key (fornitore_id) references fornitori (id);
-alter table menu add constraint menu_struttura_id_fk foreign key (struttura_id) references strutture (id);
+alter table menu add constraint menu_ristorante_id_fk foreign key (ristorante_id) references ristoranti (id);
 alter table fornitori add constraint fornitori_creato_da_fk foreign key (creato_da) references persone (persona_id);
 alter table fornitori add constraint fornitori_aggiornato_da_fk foreign key (aggiornato_da) references persone (persona_id);
 alter table fornitori add constraint fornitori_org_id_fk foreign key (org_id) references organizzazioni (org_id);
@@ -2851,7 +3170,7 @@ alter table tariffe_trasporto add constraint tariffe_trasporto_fornitore_id_fk f
 alter table esperienze add constraint esperienze_creato_da_fk foreign key (creato_da) references persone (persona_id);
 alter table esperienze add constraint esperienze_aggiornato_da_fk foreign key (aggiornato_da) references persone (persona_id);
 alter table esperienze add constraint esperienze_fornitore_id_fk foreign key (fornitore_id) references fornitori (id);
-alter table esperienze add constraint esperienze_struttura_id_fk foreign key (struttura_id) references strutture (id);
+alter table esperienze add constraint esperienze_location_id_fk foreign key (location_id) references location (id);
 alter table esperienze add constraint esperienze_foto_fk foreign key (foto) references allegati (id);
 alter table esperienze add constraint esperienze_video_fk foreign key (video) references allegati (id);
 alter table talent add constraint talent_creato_da_fk foreign key (creato_da) references persone (persona_id);
@@ -2916,14 +3235,15 @@ alter table giri add constraint giri_creato_da_fk foreign key (creato_da) refere
 alter table giri add constraint giri_aggiornato_da_fk foreign key (aggiornato_da) references persone (persona_id);
 alter table tappe add constraint tappe_giro_id_fk foreign key (giro_id) references giri (giro_id);
 alter table tappe add constraint tappe_magazzino_id_fk foreign key (magazzino_id) references magazzini (magazzino_id);
-alter table tappe add constraint tappe_struttura_id_fk foreign key (struttura_id) references strutture (id);
+alter table tappe add constraint tappe_location_id_fk foreign key (location_id) references location (id);
+alter table tappe add constraint tappe_hotel_id_fk foreign key (hotel_id) references hotel (id);
 alter table tappe add constraint tappe_commessa_id_fk foreign key (commessa_id) references commesse (commessa_id);
 alter table tappe add constraint tappe_prenotazione_id_fk foreign key (prenotazione_id) references prenotazioni (prenotazione_id);
 alter table tappe add constraint tappe_creato_da_fk foreign key (creato_da) references persone (persona_id);
 alter table tappe add constraint tappe_aggiornato_da_fk foreign key (aggiornato_da) references persone (persona_id);
 alter table logistica_persona add constraint logistica_persona_commessa_id_fk foreign key (commessa_id) references commesse (commessa_id);
 alter table logistica_persona add constraint logistica_persona_persona_id_fk foreign key (persona_id) references persone (persona_id);
-alter table logistica_persona add constraint logistica_persona_hotel_struttura_id_fk foreign key (hotel_struttura_id) references strutture (id);
+alter table logistica_persona add constraint logistica_persona_hotel_id_fk foreign key (hotel_id) references hotel (id);
 alter table logistica_persona add constraint logistica_persona_creato_da_fk foreign key (creato_da) references persone (persona_id);
 alter table logistica_persona add constraint logistica_persona_aggiornato_da_fk foreign key (aggiornato_da) references persone (persona_id);
 alter table preventivi_righe add constraint preventivi_righe_preventivo_id_fk foreign key (preventivo_id) references preventivi (preventivo_id);
@@ -2931,3 +3251,223 @@ alter table preventivi_righe add constraint preventivi_righe_magazzino_id_fk for
 alter table preventivi_righe add constraint preventivi_righe_fornitore_org_id_fk foreign key (fornitore_org_id) references organizzazioni (org_id);
 alter table preventivi_righe add constraint preventivi_righe_creato_da_fk foreign key (creato_da) references persone (persona_id);
 alter table preventivi_righe add constraint preventivi_righe_aggiornato_da_fk foreign key (aggiornato_da) references persone (persona_id);
+alter table dispositivi add constraint dispositivi_persona_id_fk foreign key (persona_id) references persone (persona_id);
+alter table dispositivi add constraint dispositivi_creato_da_fk foreign key (creato_da) references persone (persona_id);
+alter table dispositivi add constraint dispositivi_aggiornato_da_fk foreign key (aggiornato_da) references persone (persona_id);
+
+-- ════════ SINCRONIZZAZIONE TRA DISPOSITIVI ════════
+-- 1. Ogni record ha una revisione (rev). Il trigger la incrementa e aggiorna aggiornato_il a ogni modifica.
+--    L'app aggiorna con il filtro rev=eq.<rev letta> (PostgREST): se un altro dispositivo ha già modificato
+--    il record, l'aggiornamento tocca 0 righe, l'app ricarica il record e unisce le modifiche campo per campo.
+--    Se l'app manda esplicitamente una rev diversa da quella attuale, il trigger rifiuta con errore 40001.
+-- 2. Ogni modifica finisce in MODIFICHE con utente e dispositivo (header x-hub-device).
+-- 3. Le tabelle operative sono pubblicate su Supabase Realtime: ogni dispositivo aperto riceve i cambiamenti.
+
+create or replace function hub_utente() returns text language sql stable as $$
+  select coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'sub', current_user::text)
+$$;
+create or replace function hub_dispositivo() returns text language sql stable as $$
+  select nullif(current_setting('request.headers', true), '')::jsonb ->> 'x-hub-device'
+$$;
+create or replace function hub_prima_di_modifica() returns trigger language plpgsql as $$
+begin
+  if new.rev is distinct from old.rev then
+    raise exception 'conflitto_versione: %.% è stato modificato da un altro dispositivo (rev attuale %, inviata %)',
+      TG_TABLE_NAME, to_jsonb(old) ->> TG_ARGV[0], old.rev, new.rev using errcode = '40001';
+  end if;
+  if to_jsonb(new) ? 'aggiornato_il' then
+    new := jsonb_populate_record(new, jsonb_build_object('rev', old.rev + 1, 'aggiornato_il', now()));
+  else
+    new.rev := old.rev + 1;
+  end if;
+  return new;
+end $$;
+create or replace function hub_registra() returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  vecchio jsonb := case when TG_OP <> 'INSERT' then to_jsonb(old) end;
+  nuovo   jsonb := case when TG_OP <> 'DELETE' then to_jsonb(new) end;
+  diff    jsonb;
+begin
+  if TG_OP = 'UPDATE' then
+    select jsonb_object_agg(k, jsonb_build_array(vecchio -> k, nuovo -> k)) into diff
+    from jsonb_object_keys(nuovo) as k
+    where (vecchio -> k) is distinct from (nuovo -> k) and k not in ('rev', 'aggiornato_il');
+    if diff is null then return null; end if;
+  end if;
+  insert into modifiche (tabella, record_id, operazione, differenze, utente, dispositivo, quando)
+  values (TG_TABLE_NAME, coalesce(nuovo, vecchio) ->> TG_ARGV[0], lower(TG_OP), coalesce(diff, nuovo, vecchio), hub_utente(), hub_dispositivo(), now());
+  return null;
+end $$;
+
+create trigger ruoli_rev before update on ruoli for each row execute function hub_prima_di_modifica('ruolo_id');
+create trigger ruoli_log after insert or update or delete on ruoli for each row execute function hub_registra('ruolo_id');
+create trigger aree_rev before update on aree for each row execute function hub_prima_di_modifica('area_id');
+create trigger aree_log after insert or update or delete on aree for each row execute function hub_registra('area_id');
+create trigger permessi_rev before update on permessi for each row execute function hub_prima_di_modifica('id');
+create trigger permessi_log after insert or update or delete on permessi for each row execute function hub_registra('id');
+create trigger liste_valori_rev before update on liste_valori for each row execute function hub_prima_di_modifica('id');
+create trigger liste_valori_log after insert or update or delete on liste_valori for each row execute function hub_registra('id');
+create trigger impostazioni_rev before update on impostazioni for each row execute function hub_prima_di_modifica('chiave');
+create trigger impostazioni_log after insert or update or delete on impostazioni for each row execute function hub_registra('chiave');
+create trigger persone_rev before update on persone for each row execute function hub_prima_di_modifica('persona_id');
+create trigger persone_log after insert or update or delete on persone for each row execute function hub_registra('persona_id');
+create trigger persone_ruoli_rev before update on persone_ruoli for each row execute function hub_prima_di_modifica('id');
+create trigger persone_ruoli_log after insert or update or delete on persone_ruoli for each row execute function hub_registra('id');
+create trigger competenze_rev before update on competenze for each row execute function hub_prima_di_modifica('id');
+create trigger competenze_log after insert or update or delete on competenze for each row execute function hub_registra('id');
+create trigger indisponibilita_rev before update on indisponibilita for each row execute function hub_prima_di_modifica('indisp_id');
+create trigger indisponibilita_log after insert or update or delete on indisponibilita for each row execute function hub_registra('indisp_id');
+create trigger dati_riservati_rev before update on dati_riservati for each row execute function hub_prima_di_modifica('id');
+create trigger dati_riservati_log after insert or update or delete on dati_riservati for each row execute function hub_registra('id');
+create trigger organizzazioni_rev before update on organizzazioni for each row execute function hub_prima_di_modifica('org_id');
+create trigger organizzazioni_log after insert or update or delete on organizzazioni for each row execute function hub_registra('org_id');
+create trigger contatti_rev before update on contatti for each row execute function hub_prima_di_modifica('contatto_id');
+create trigger contatti_log after insert or update or delete on contatti for each row execute function hub_registra('contatto_id');
+create trigger agenzie_clienti_rev before update on agenzie_clienti for each row execute function hub_prima_di_modifica('rel_id');
+create trigger agenzie_clienti_log after insert or update or delete on agenzie_clienti for each row execute function hub_registra('rel_id');
+create trigger accordi_partner_rev before update on accordi_partner for each row execute function hub_prima_di_modifica('accordo_id');
+create trigger accordi_partner_log after insert or update or delete on accordi_partner for each row execute function hub_registra('accordo_id');
+create trigger segnalazioni_rev before update on segnalazioni for each row execute function hub_prima_di_modifica('segnalazione_id');
+create trigger segnalazioni_log after insert or update or delete on segnalazioni for each row execute function hub_registra('segnalazione_id');
+create trigger contratti_quadro_rev before update on contratti_quadro for each row execute function hub_prima_di_modifica('cq_id');
+create trigger contratti_quadro_log after insert or update or delete on contratti_quadro for each row execute function hub_registra('cq_id');
+create trigger commesse_rev before update on commesse for each row execute function hub_prima_di_modifica('commessa_id');
+create trigger commesse_log after insert or update or delete on commesse for each row execute function hub_registra('commessa_id');
+create trigger brief_rev before update on brief for each row execute function hub_prima_di_modifica('id');
+create trigger brief_log after insert or update or delete on brief for each row execute function hub_registra('id');
+create trigger team_rev before update on team for each row execute function hub_prima_di_modifica('id');
+create trigger team_log after insert or update or delete on team for each row execute function hub_registra('id');
+create trigger impegni_rev before update on impegni for each row execute function hub_prima_di_modifica('impegno_id');
+create trigger impegni_log after insert or update or delete on impegni for each row execute function hub_registra('impegno_id');
+create trigger storico_stati_rev before update on storico_stati for each row execute function hub_prima_di_modifica('id');
+create trigger storico_stati_log after insert or update or delete on storico_stati for each row execute function hub_registra('id');
+create trigger file_rev before update on file for each row execute function hub_prima_di_modifica('file_id');
+create trigger file_log after insert or update or delete on file for each row execute function hub_registra('file_id');
+create trigger riassunti_rev before update on riassunti for each row execute function hub_prima_di_modifica('riassunto_id');
+create trigger riassunti_log after insert or update or delete on riassunti for each row execute function hub_registra('riassunto_id');
+create trigger proposte_ai_rev before update on proposte_ai for each row execute function hub_prima_di_modifica('proposta_id');
+create trigger proposte_ai_log after insert or update or delete on proposte_ai for each row execute function hub_registra('proposta_id');
+create trigger magazzini_rev before update on magazzini for each row execute function hub_prima_di_modifica('magazzino_id');
+create trigger magazzini_log after insert or update or delete on magazzini for each row execute function hub_registra('magazzino_id');
+create trigger articoli_rev before update on articoli for each row execute function hub_prima_di_modifica('articolo_id');
+create trigger articoli_log after insert or update or delete on articoli for each row execute function hub_registra('articolo_id');
+create trigger pezzi_rev before update on pezzi for each row execute function hub_prima_di_modifica('pezzo_id');
+create trigger pezzi_log after insert or update or delete on pezzi for each row execute function hub_registra('pezzo_id');
+create trigger giacenze_rev before update on giacenze for each row execute function hub_prima_di_modifica('id');
+create trigger giacenze_log after insert or update or delete on giacenze for each row execute function hub_registra('id');
+create trigger prenotazioni_rev before update on prenotazioni for each row execute function hub_prima_di_modifica('prenotazione_id');
+create trigger prenotazioni_log after insert or update or delete on prenotazioni for each row execute function hub_registra('prenotazione_id');
+create trigger movimenti_rev before update on movimenti for each row execute function hub_prima_di_modifica('movimento_id');
+create trigger movimenti_log after insert or update or delete on movimenti for each row execute function hub_registra('movimento_id');
+create trigger listino_rev before update on listino for each row execute function hub_prima_di_modifica('voce_id');
+create trigger listino_log after insert or update or delete on listino for each row execute function hub_registra('voce_id');
+create trigger pacchetti_rev before update on pacchetti for each row execute function hub_prima_di_modifica('pacchetto_id');
+create trigger pacchetti_log after insert or update or delete on pacchetti for each row execute function hub_registra('pacchetto_id');
+create trigger pacchetti_voci_rev before update on pacchetti_voci for each row execute function hub_prima_di_modifica('id');
+create trigger pacchetti_voci_log after insert or update or delete on pacchetti_voci for each row execute function hub_registra('id');
+create trigger costing_rev before update on costing for each row execute function hub_prima_di_modifica('riga_id');
+create trigger costing_log after insert or update or delete on costing for each row execute function hub_registra('riga_id');
+create trigger preventivi_rev before update on preventivi for each row execute function hub_prima_di_modifica('preventivo_id');
+create trigger preventivi_log after insert or update or delete on preventivi for each row execute function hub_registra('preventivo_id');
+create trigger fatture_rev before update on fatture for each row execute function hub_prima_di_modifica('fattura_id');
+create trigger fatture_log after insert or update or delete on fatture for each row execute function hub_registra('fattura_id');
+create trigger rebate_rev before update on rebate for each row execute function hub_prima_di_modifica('rebate_id');
+create trigger rebate_log after insert or update or delete on rebate for each row execute function hub_registra('rebate_id');
+create trigger ordini_rev before update on ordini for each row execute function hub_prima_di_modifica('ordine_id');
+create trigger ordini_log after insert or update or delete on ordini for each row execute function hub_registra('ordine_id');
+create trigger ordini_righe_rev before update on ordini_righe for each row execute function hub_prima_di_modifica('id');
+create trigger ordini_righe_log after insert or update or delete on ordini_righe for each row execute function hub_registra('id');
+create trigger noleggi_rev before update on noleggi for each row execute function hub_prima_di_modifica('noleggio_id');
+create trigger noleggi_log after insert or update or delete on noleggi for each row execute function hub_registra('noleggio_id');
+create trigger trasporti_rev before update on trasporti for each row execute function hub_prima_di_modifica('trasporto_id');
+create trigger trasporti_log after insert or update or delete on trasporti for each row execute function hub_registra('trasporto_id');
+create trigger grafiche_rev before update on grafiche for each row execute function hub_prima_di_modifica('grafica_id');
+create trigger grafiche_log after insert or update or delete on grafiche for each row execute function hub_registra('grafica_id');
+create trigger sicurezza_rev before update on sicurezza for each row execute function hub_prima_di_modifica('doc_id');
+create trigger sicurezza_log after insert or update or delete on sicurezza for each row execute function hub_registra('doc_id');
+create trigger timesheet_rev before update on timesheet for each row execute function hub_prima_di_modifica('riga_id');
+create trigger timesheet_log after insert or update or delete on timesheet for each row execute function hub_registra('riga_id');
+create trigger todo_clickup_rev before update on todo_clickup for each row execute function hub_prima_di_modifica('clickup_task_id');
+create trigger todo_clickup_log after insert or update or delete on todo_clickup for each row execute function hub_registra('clickup_task_id');
+create trigger location_rev before update on location for each row execute function hub_prima_di_modifica('id');
+create trigger location_log after insert or update or delete on location for each row execute function hub_registra('id');
+create trigger spazi_rev before update on spazi for each row execute function hub_prima_di_modifica('id');
+create trigger spazi_log after insert or update or delete on spazi for each row execute function hub_registra('id');
+create trigger spazi_capienze_rev before update on spazi_capienze for each row execute function hub_prima_di_modifica('id');
+create trigger spazi_capienze_log after insert or update or delete on spazi_capienze for each row execute function hub_registra('id');
+create trigger hotel_rev before update on hotel for each row execute function hub_prima_di_modifica('id');
+create trigger hotel_log after insert or update or delete on hotel for each row execute function hub_registra('id');
+create trigger camere_tipologie_rev before update on camere_tipologie for each row execute function hub_prima_di_modifica('id');
+create trigger camere_tipologie_log after insert or update or delete on camere_tipologie for each row execute function hub_registra('id');
+create trigger tariffe_hotel_rev before update on tariffe_hotel for each row execute function hub_prima_di_modifica('id');
+create trigger tariffe_hotel_log after insert or update or delete on tariffe_hotel for each row execute function hub_registra('id');
+create trigger pacchetti_meeting_rev before update on pacchetti_meeting for each row execute function hub_prima_di_modifica('id');
+create trigger pacchetti_meeting_log after insert or update or delete on pacchetti_meeting for each row execute function hub_registra('id');
+create trigger ristoranti_rev before update on ristoranti for each row execute function hub_prima_di_modifica('id');
+create trigger ristoranti_log after insert or update or delete on ristoranti for each row execute function hub_registra('id');
+create trigger catering_rev before update on catering for each row execute function hub_prima_di_modifica('id');
+create trigger catering_log after insert or update or delete on catering for each row execute function hub_registra('id');
+create trigger menu_rev before update on menu for each row execute function hub_prima_di_modifica('id');
+create trigger menu_log after insert or update or delete on menu for each row execute function hub_registra('id');
+create trigger fornitori_rev before update on fornitori for each row execute function hub_prima_di_modifica('id');
+create trigger fornitori_log after insert or update or delete on fornitori for each row execute function hub_registra('id');
+create trigger fornitori_aree_rev before update on fornitori_aree for each row execute function hub_prima_di_modifica('id');
+create trigger fornitori_aree_log after insert or update or delete on fornitori_aree for each row execute function hub_registra('id');
+create trigger offerte_rev before update on offerte for each row execute function hub_prima_di_modifica('id');
+create trigger offerte_log after insert or update or delete on offerte for each row execute function hub_registra('id');
+create trigger accordi_fornitore_rev before update on accordi_fornitore for each row execute function hub_prima_di_modifica('id');
+create trigger accordi_fornitore_log after insert or update or delete on accordi_fornitore for each row execute function hub_registra('id');
+create trigger veicoli_rev before update on veicoli for each row execute function hub_prima_di_modifica('id');
+create trigger veicoli_log after insert or update or delete on veicoli for each row execute function hub_registra('id');
+create trigger tariffe_trasporto_rev before update on tariffe_trasporto for each row execute function hub_prima_di_modifica('id');
+create trigger tariffe_trasporto_log after insert or update or delete on tariffe_trasporto for each row execute function hub_registra('id');
+create trigger esperienze_rev before update on esperienze for each row execute function hub_prima_di_modifica('id');
+create trigger esperienze_log after insert or update or delete on esperienze for each row execute function hub_registra('id');
+create trigger talent_rev before update on talent for each row execute function hub_prima_di_modifica('id');
+create trigger talent_log after insert or update or delete on talent for each row execute function hub_registra('id');
+create trigger dmc_rev before update on dmc for each row execute function hub_prima_di_modifica('id');
+create trigger dmc_log after insert or update or delete on dmc for each row execute function hub_registra('id');
+create trigger persone_lingue_rev before update on persone_lingue for each row execute function hub_prima_di_modifica('id');
+create trigger persone_lingue_log after insert or update or delete on persone_lingue for each row execute function hub_registra('id');
+create trigger servizi_digitali_rev before update on servizi_digitali for each row execute function hub_prima_di_modifica('id');
+create trigger servizi_digitali_log after insert or update or delete on servizi_digitali for each row execute function hub_registra('id');
+create trigger documenti_rev before update on documenti for each row execute function hub_prima_di_modifica('id');
+create trigger documenti_log after insert or update or delete on documenti for each row execute function hub_registra('id');
+create trigger allegati_rev before update on allegati for each row execute function hub_prima_di_modifica('id');
+create trigger allegati_log after insert or update or delete on allegati for each row execute function hub_registra('id');
+create trigger validazioni_rev before update on validazioni for each row execute function hub_prima_di_modifica('id');
+create trigger validazioni_log after insert or update or delete on validazioni for each row execute function hub_registra('id');
+create trigger richieste_censimento_rev before update on richieste_censimento for each row execute function hub_prima_di_modifica('id');
+create trigger richieste_censimento_log after insert or update or delete on richieste_censimento for each row execute function hub_registra('id');
+create trigger piano_commessa_rev before update on piano_commessa for each row execute function hub_prima_di_modifica('id');
+create trigger piano_commessa_log after insert or update or delete on piano_commessa for each row execute function hub_registra('id');
+create trigger fasi_rev before update on fasi for each row execute function hub_prima_di_modifica('fase_id');
+create trigger fasi_log after insert or update or delete on fasi for each row execute function hub_registra('fase_id');
+create trigger fabbisogni_rev before update on fabbisogni for each row execute function hub_prima_di_modifica('fabbisogno_id');
+create trigger fabbisogni_log after insert or update or delete on fabbisogni for each row execute function hub_registra('fabbisogno_id');
+create trigger alert_regole_rev before update on alert_regole for each row execute function hub_prima_di_modifica('regola_id');
+create trigger alert_regole_log after insert or update or delete on alert_regole for each row execute function hub_registra('regola_id');
+create trigger alert_rev before update on alert for each row execute function hub_prima_di_modifica('alert_id');
+create trigger alert_log after insert or update or delete on alert for each row execute function hub_registra('alert_id');
+create trigger commessa_aree_rev before update on commessa_aree for each row execute function hub_prima_di_modifica('id');
+create trigger commessa_aree_log after insert or update or delete on commessa_aree for each row execute function hub_registra('id');
+create trigger richieste_offerta_rev before update on richieste_offerta for each row execute function hub_prima_di_modifica('rdo_id');
+create trigger richieste_offerta_log after insert or update or delete on richieste_offerta for each row execute function hub_registra('rdo_id');
+create trigger rdo_fornitori_rev before update on rdo_fornitori for each row execute function hub_prima_di_modifica('id');
+create trigger rdo_fornitori_log after insert or update or delete on rdo_fornitori for each row execute function hub_registra('id');
+create trigger giri_rev before update on giri for each row execute function hub_prima_di_modifica('giro_id');
+create trigger giri_log after insert or update or delete on giri for each row execute function hub_registra('giro_id');
+create trigger tappe_rev before update on tappe for each row execute function hub_prima_di_modifica('id');
+create trigger tappe_log after insert or update or delete on tappe for each row execute function hub_registra('id');
+create trigger logistica_persona_rev before update on logistica_persona for each row execute function hub_prima_di_modifica('logistica_id');
+create trigger logistica_persona_log after insert or update or delete on logistica_persona for each row execute function hub_registra('logistica_id');
+create trigger preventivi_righe_rev before update on preventivi_righe for each row execute function hub_prima_di_modifica('riga_id');
+create trigger preventivi_righe_log after insert or update or delete on preventivi_righe for each row execute function hub_registra('riga_id');
+create trigger dispositivi_rev before update on dispositivi for each row execute function hub_prima_di_modifica('dispositivo_id');
+create trigger dispositivi_log after insert or update or delete on dispositivi for each row execute function hub_registra('dispositivo_id');
+
+do $$ begin
+  if exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
+    alter publication supabase_realtime add table commesse, piano_commessa, fasi, fabbisogni, impegni, timesheet, prenotazioni, preventivi, preventivi_righe, todo_clickup, alert, commessa_aree, rdo_fornitori, giri, tappe, logistica_persona, validazioni, dispositivi;
+  end if;
+end $$;
