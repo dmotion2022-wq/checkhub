@@ -2,6 +2,8 @@
 
 Schema del database del **Nakama Hub**, l'applicativo comune di Chedo e Nakama per commesse, anagrafiche, magazzino, calendario delle risorse e preventivi. Il database previsto è **Supabase (Postgres)**.
 
+**Consulta lo schema online:** https://dmotion2022-wq.github.io/checkhub/
+
 > **Stato: bozza da validare.** Le colonne delle anagrafiche sono in validazione colonna per colonna con il team. La migrazione SQL serve come base di lavoro: non applicarla in produzione prima della validazione.
 
 ## Contenuto
@@ -14,6 +16,7 @@ Schema del database del **Nakama Hub**, l'applicativo comune di Chedo e Nakama p
 | `schema/flussi_v1.py` | Flussi di commessa (docs 11-12): piano di lavoro e fasi, fabbisogni, alert, aree, richieste d'offerta, giri e tappe, logistica persone, righe di preventivo con regime IVA |
 | `schema/gen_sql.py` | Genera la migrazione SQL dai tre file sopra |
 | `supabase/migrations/20261019000000_schema_hub_bozza.sql` | Migrazione generata: 84 tabelle, 342 chiavi esterne, commenti su tabelle e colonne, RLS attiva, trigger di sincronizzazione |
+| `docs/` | Sito GitHub Pages per consultare lo schema: `index.html` legge `schema.json`, generato con `gen_sql.py --json` |
 | `CLAUDE.md` | Regole per chi lavora sullo schema da più dispositivi o sessioni |
 
 ## Come è scritto lo schema
@@ -55,6 +58,7 @@ L'Hub sarà usato insieme da computer, telefoni e tablet. Lo schema lo gestisce 
 ```bash
 cd schema
 python3 gen_sql.py > ../supabase/migrations/20261019000000_schema_hub_bozza.sql
+python3 gen_sql.py --json > ../docs/schema.json
 ```
 
 La migrazione è stata verificata su un Postgres 16 vuoto. Si applica senza errori e i trigger funzionano: revisione, conflitto su `rev` vecchia, registro modifiche, vincolo sugli spazi.

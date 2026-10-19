@@ -2,7 +2,7 @@
 Fonti: spec.py (nucleo v1, doc 09), schema_db.py (anagrafiche, doc 10), schema_flussi.py (docs 11-12).
 Uso: cd schema && python3 gen_sql.py > ../supabase/migrations/20261019000000_schema_hub_bozza.sql
 """
-import re
+import re, sys, json
 import core_v1 as spec, anagrafiche_v1 as schema_db, flussi_v1 as schema_flussi
 
 SOSTITUITE = {"LOCATION": "location", "SALE": "spazi", "MEZZI": "veicoli", "FORNITORI": "fornitori"}
@@ -77,7 +77,7 @@ def add_col(T, name, t, comment):
 for fname, fdesc, tabs in spec.FILES:
     for tname, cols in tabs:
         if tname in SOSTITUITE: continue
-        T = tab(tname.lower(), f"{fname} · {fdesc}", "core")
+        T = tab(tname.lower(), f"{fname} · {fdesc}", "core"); T.group, T.desc, T.gdesc = fname, "", fdesc
         for c in cols:
             if c[1] == "ID" and T.pk is None:
                 T.add(ident(c[0]), "text", c[2], pk=True); T.pk = c[0]
@@ -86,7 +86,7 @@ for fname, fdesc, tabs in spec.FILES:
 
 # 2. flussi (docs 11-12)
 for tname, desc, cols in schema_flussi.TABELLE:
-    T = tab(tname.lower(), desc, "flussi")
+    T = tab(tname.lower(), desc, "flussi"); T.group = "SINCRONIZZAZIONE" if tname in ("DISPOSITIVI", "MODIFICHE") else "FLUSSI DI COMMESSA"; T.desc = desc; T.gdesc = "Dispositivi e registro delle modifiche, per gli aggiornamenti da più dispositivi" if T.group == "SINCRONIZZAZIONE" else "Piano di lavoro, fasi, fabbisogni, alert, aree, richieste d'offerta, giri, logistica, righe di preventivo (docs 11-12)"
     for c in cols:
         if c[1] == "ID" and T.pk is None:
             T.add(ident(c[0]), "text", c[2], pk=True); T.pk = c[0]
@@ -105,7 +105,7 @@ for area, adesc, tabs in schema_db.AREE:
             T = TABS[MERGE_ANAG[tname]]
             for c in cols: add_col(T, c[0], c[1], c[2])
             continue
-        T = tab(ident(tname), f"{area} · {tdesc}", "anagrafiche")
+        T = tab(ident(tname), f"{area} · {tdesc}", "anagrafiche"); T.group, T.desc, T.gdesc = area, tdesc, adesc
         T.add("id", "uuid", "chiave interna", pk=True); T.pk = "id"
         for c in schema_db.COMUNI[1:]:
             if c[0] != "rev": add_col(T, c[0], c[1], c[2])
@@ -225,6 +225,24 @@ do $$ begin
     alter publication supabase_realtime add table """ + ", ".join(REALTIME) + """;
   end if;
 end $$;""")
+if "--json" in sys.argv:
+    def col_json(T, c):
+        typ, ref = c["type"], None
+        if typ in ("__ref__", "__array_ref__"):
+            ref = target(c["ref"])
+            typ = (pk_type(ref) if ref else "text") + ("[]" if c["type"] == "__array_ref__" else "")
+        return dict(n=c["name"], t=typ.replace(" generated always as identity", " (auto)").replace(" not null default 1", ""), r=ref, pk=c["pk"], ch=c["check"], d=c["comment"])
+    tabs = []
+    for T in order:
+        cols = [col_json(T, c) for c in T.cols]
+        tabs.append(dict(n=T.name, k=T.kind, g=getattr(T, "group", ""), gd=getattr(T, "gdesc", ""), d=getattr(T, "desc", T.comment), cols=cols,
+                         ext=EXTRA_CHECK.get(T.name, ""), rt=T.name in REALTIME))
+    inc = {}
+    for t in tabs:
+        for c in t["cols"]:
+            if c["r"]: inc.setdefault(c["r"], []).append(f'{t["n"]}.{c["n"]}')
+    for t in tabs: t["inc"] = sorted(set(inc.get(t["n"], [])))
+    print(json.dumps(dict(tabelle=tabs, fk=len(fks)), ensure_ascii=False))
+    sys.exit(0)
 print("\n".join(out))
-import sys
 print(f"-- {len(TABS)} tabelle, {sum(len(t.cols) for t in TABS.values())} colonne, {len(fks)} chiavi esterne", file=sys.stderr)

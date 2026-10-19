@@ -6,6 +6,7 @@ Lo schema viene modificato da più persone, da più dispositivi e da più sessio
 2. **Le fonti sono i file in `schema/`** (`core_v1.py`, `anagrafiche_v1.py`, `flussi_v1.py`). Non si modifica a mano il file SQL in `supabase/migrations/`: si rigenera.
 3. Dopo ogni modifica allo schema:
    - `cd schema && python3 gen_sql.py > ../supabase/migrations/20261019000000_schema_hub_bozza.sql`
+   - `python3 gen_sql.py --json > ../docs/schema.json` (sito GitHub Pages);
    - rigenerare `schema/anagrafiche_v1.json`, che serve alla pagina di validazione;
    - provare la migrazione su un Postgres vuoto.
 4. **Gli esiti della validazione** delle colonne vivono nella pagina "Schema database Hub", condivisa tra tutti i dispositivi. Prima di cambiare una colonna, controllare se ha già un esito o un commento.
