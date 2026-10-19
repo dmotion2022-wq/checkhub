@@ -1,0 +1,28 @@
+# Copia docs/ sul ramo gh-pages a ogni push su main, così il sito GitHub Pages
+# resta allineato allo schema senza passaggi manuali.
+name: Pubblica sito schema
+on:
+  push:
+    branches: [main]
+    paths: ["docs/**"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  pubblica:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Aggiorna gh-pages con docs/
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp -r docs /tmp/sito
+          git fetch origin gh-pages
+          git checkout gh-pages
+          git rm -rq --ignore-unmatch .
+          cp -r /tmp/sito/. .
+          git add -A
+          git diff --cached --quiet && echo "Nessuna modifica" && exit 0
+          git commit -m "Sito aggiornato da main ${GITHUB_SHA::7}"
+          git push origin gh-pages

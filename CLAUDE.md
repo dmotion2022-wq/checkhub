@@ -9,6 +9,7 @@ Lo schema viene modificato da più persone, da più dispositivi e da più sessio
    - `python3 gen_sql.py --json > ../docs/schema.json` (sito GitHub Pages);
    - rigenerare `schema/anagrafiche_v1.json`, che serve alla pagina di validazione;
    - provare la migrazione su un Postgres vuoto.
+   Il sito https://dmotion2022-wq.github.io/checkhub/ si aggiorna da solo: il workflow `pages.yml` copia `docs/` sul ramo `gh-pages` a ogni push su `main`.
 4. **Gli esiti della validazione** delle colonne vivono nella pagina "Schema database Hub", condivisa tra tutti i dispositivi. Prima di cambiare una colonna, controllare se ha già un esito o un commento.
 5. **Commit piccoli**, con un messaggio che dica cosa cambia nello schema. Push subito, così gli altri dispositivi lo vedono.
 6. **Il repository è pubblico.** Niente dati reali, credenziali, link o ID di file Drive. I documenti di progetto restano nel progetto Claude "OTTIMIZZAZIONE PROCESSI".
