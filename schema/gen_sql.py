@@ -131,7 +131,7 @@ def pk_type(r):
 
 out = []
 w = out.append
-w("-- Nakama Hub · schema database · BOZZA da validare (non applicare in produzione)")
+w("-- Doffy · schema database · BOZZA da validare (non applicare in produzione)")
 w("-- Generato da gen_sql.py partendo da schema/core_v1.py, schema/anagrafiche_v1.py e schema/flussi_v1.py.")
 w("-- Le chiavi esterne sono aggiunte alla fine, così l'ordine delle tabelle non conta.")
 w("-- RLS attiva su tutte le tabelle. MVP: un'unica utenza master con accesso completo (policy in fondo al file).\n")

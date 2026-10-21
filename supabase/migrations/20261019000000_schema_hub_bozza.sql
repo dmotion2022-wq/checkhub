@@ -1,4 +1,4 @@
--- Nakama Hub · schema database · BOZZA da validare (non applicare in produzione)
+-- Doffy · schema database · BOZZA da validare (non applicare in produzione)
 -- Generato da gen_sql.py partendo da schema/core_v1.py, schema/anagrafiche_v1.py e schema/flussi_v1.py.
 -- Le chiavi esterne sono aggiunte alla fine, così l'ordine delle tabelle non conta.
 -- RLS attiva su tutte le tabelle. MVP: un'unica utenza master con accesso completo (policy in fondo al file).

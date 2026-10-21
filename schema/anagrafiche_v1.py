@@ -1,4 +1,4 @@
-# Schema anagrafiche Nakama Hub su Supabase · v1 da validare
+# Schema anagrafiche Doffy su Supabase · v1 da validare
 # Ogni colonna: (nome, tipo, descrizione, esempio, flag)  flag: "o" obbligatoria, "v" voce validabile singolarmente
 # Le colonne comuni (COMUNI) valgono per ogni tabella e non sono ripetute.
 
