@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Schema database Nakama Hub</title>
-<meta name="description" content="Tabelle, colonne e collegamenti del database del Nakama Hub (Supabase). Bozza da validare.">
+<title>Schema database Doffy</title>
+<meta name="description" content="Tabelle, colonne e collegamenti del database di Doffy (Supabase). Bozza da validare.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@85,600;85,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -85,7 +85,7 @@ footer{padding-block:24px 40px;color:var(--muted);font-size:.8125rem;border-top:
 </head>
 <body>
 <header class="top"><div class="wrap">
-  <div class="brand"><span class="mark">N</span><h1>Schema database Nakama Hub</h1><span class="draft">BOZZA</span></div>
+  <div class="brand"><span class="mark">D</span><h1>Schema database Doffy</h1><span class="draft">BOZZA</span></div>
   <div class="seg" role="group" aria-label="Parte dello schema" id="seg"></div>
   <input class="search" id="q" type="search" placeholder="Cerca tabella, colonna, descrizione" aria-label="Cerca">
 </div></header>
@@ -119,7 +119,7 @@ function render() {
   let h = `<section class="intro"><div>
       <p class="lbl">Supabase · Postgres</p>
       <h2>Tabelle, colonne e collegamenti</h2>
-      <p>Il database del Nakama Hub, l'applicativo comune di Chedo e Nakama. Le anagrafiche sono in validazione con il team: questa è una bozza.</p>
+      <p>Il database di Doffy, l'applicativo comune di Chedo e Nakama. Le anagrafiche sono in validazione con il team: questa è una bozza.</p>
       <p>Ogni tabella ha la colonna <span class="mono">rev</span> per gli aggiornamenti da più dispositivi: ogni modifica la incrementa e una modifica fatta su una versione vecchia non sovrascrive quella più recente. Ogni cambiamento finisce nella tabella <a href="#modifiche" class="mono">modifiche</a>.</p>
       <div class="legend"><span><i style="background:var(--core)"></i>nucleo</span><span><i style="background:var(--anag)"></i>anagrafiche</span><span><i style="background:var(--flussi)"></i>flussi e sincronizzazione</span></div>
     </div>
