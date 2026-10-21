@@ -1,6 +1,6 @@
-# Nakama Hub · schema database
+# Doffy · schema database
 
-Schema del database del **Nakama Hub**, l'applicativo comune di Chedo e Nakama per commesse, anagrafiche, magazzino, calendario delle risorse e preventivi. Il database previsto è **Supabase (Postgres)**.
+Schema del database del **Doffy**, l'applicativo comune di Chedo e Nakama per commesse, anagrafiche, magazzino, calendario delle risorse e preventivi. Il database previsto è **Supabase (Postgres)**.
 
 **Consulta lo schema online:** https://dmotion2022-wq.github.io/checkhub/
 

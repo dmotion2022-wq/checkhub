@@ -1,4 +1,4 @@
-# Spec infrastruttura dati Nakama Hub v1 — tab: lista di (colonna, tipo, descrizione)
+# Spec infrastruttura dati Doffy v1 — tab: lista di (colonna, tipo, descrizione)
 # tipi: ID chiave · →TAB collegamento · testo · numero · € · % · data · data e ora · sì/no · lista: … · email · url
 A=[("creato_il","data e ora",""),("creato_da","→PERSONE",""),("aggiornato_il","data e ora",""),("aggiornato_da","→PERSONE","")]
 def T(*cols,audit=True): return [c if isinstance(c,tuple) else (c,"testo","") for c in cols]+(A if audit else [])

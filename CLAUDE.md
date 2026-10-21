@@ -1,5 +1,7 @@
 # Regole per lavorare su questo repository
 
+Il prodotto si chiama **Doffy** (dal 21 ottobre; prima "Nakama Hub"). Usare sempre Doffy nel codice, nei testi e nei commit.
+
 Lo schema viene modificato da più persone, da più dispositivi e da più sessioni di Claude. Per non perdere aggiornamenti:
 
 1. **Prima di ogni modifica**, `git pull --rebase origin main`. Non si lavora mai su una copia vecchia.
@@ -31,4 +33,7 @@ Riviste con la skill ui-ux-pro-max (stile "Minimalism & Swiss", densità alta):
 - Sidebar a sinistra con icone SVG e etichette; su telefono diventa una barra in alto.
 - Titoli dei pannelli come etichette maiuscole piccole; niente sottotitoli esplicativi sotto i titoli delle viste; niente testi di aiuto sotto i form.
 - Stato sempre con testo oltre al colore. Stati vuoti in una riga.
+- Scheda File: albero Drive navigabile per cartelle e sottocartelle, con breadcrumb; un file aperto mostra il riassunto.
+- Calendario magazzino: settimana con le ore, come Google Calendar; ogni blocco è una commessa che occupa materiale (anche su più giorni); cliccando si vede l'elenco dei prodotti occupati. Niente griglia articoli × giorni.
+- I prodotti si chiamano per marca e modello (es. "Midas M32"), mai con la descrizione. Cliccando un prodotto si apre la scheda con foto e dati tecnici (dal database, in futuro).
 - La scheda progetto è a moduli: intestazione (codice, titolo, preventivo) e un menu di schede. Overview (dati chiave, riassunto, team con volti grandi, numeri, attenzione, piano), Preventivo, Persone, Materiale e trasporti, Ordini, File, Sicurezza, To-Do. Una scheda compare solo se per quell'evento ha contenuto; Overview, Preventivo e Persone ci sono sempre.
