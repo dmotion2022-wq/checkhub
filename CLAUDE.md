@@ -23,8 +23,11 @@ Lo schema viene modificato da più persone, da più dispositivi e da più sessio
 
 ## Linee guida UI del gestionale (dal 19 ottobre)
 Riviste con la skill ui-ux-pro-max (stile "Minimalism & Swiss", densità alta):
-- Un solo accento (blu), neutri slate, bordi al posto delle ombre, raggio 6px, ritmo a 8px, testo base 13px.
-- Un'unica famiglia (Plus Jakarta Sans) più un mono per codici e numeri (JetBrains Mono).
+- Sfondo bianco, tema chiaro unico (niente tema scuro). Un solo accento (blu), neutri slate, bordi al posto delle ombre, raggio 6px, ritmo a 8px, testo base 13px.
+- Un'unica famiglia: Inter. Niente monospace; i numeri usano le cifre tabulari di Inter.
+- Colore azienda: Chedo azzurro (#2BB3E6, da allineare al logo), Nakama #FF2E7E. Si usa come gradiente leggero nell'intestazione della scheda progetto e come striscia a sinistra nelle righe dell'elenco progetti. Non altrove.
+- Gerarchia dell'intestazione progetto, in ordine: nome e codice commessa, location, PM di riferimento.
+- Magazzino: le richieste sono un accordion per commessa (codice ed evento); dentro, caselle di controllo per riga, link al preventivo, "Conferma selezionate". Le giacenze mostrano solo nome dell'articolo e disponibilità. Niente diciture tipo "liberi / totali · date".
 - Sidebar a sinistra con icone SVG e etichette; su telefono diventa una barra in alto.
 - Titoli dei pannelli come etichette maiuscole piccole; niente sottotitoli esplicativi sotto i titoli delle viste; niente testi di aiuto sotto i form.
 - Stato sempre con testo oltre al colore. Stati vuoti in una riga.
