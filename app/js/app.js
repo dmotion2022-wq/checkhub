@@ -42,6 +42,7 @@ const vedeNumeri = () => !!liv("COSTING");
 const STATO_CLS = { "prospect": "p-warn", "confermata": "p-acc", "in preparazione": "p-acc", "in corso": "p-crit", "consuntivo": "p-ok", "chiusa": "", "persa": "", "annullata": "" };
 const pill = (txt, cls = "") => `<span class="pill ${cls}">${esc(txt)}</span>`;
 
+function fieldError(id, msg) { const el = document.getElementById(id); if (!el) { toast(msg); return; } const f = el.closest(".field"); if (f) { f.classList.add("err"); f.querySelector(".ferr")?.remove(); const e = document.createElement("div"); e.className = "ferr"; e.id = id + "-err"; e.textContent = msg; f.appendChild(e); el.setAttribute("aria-describedby", e.id); el.setAttribute("aria-invalid", "true"); el.addEventListener("input", () => { f.classList.remove("err"); e.remove(); el.removeAttribute("aria-invalid"); }, { once: true }); } el.focus(); }
 function toast(msg) { const t = document.getElementById("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast._t); toast._t = setTimeout(() => t.hidden = true, 2600); }
 
 /* ───────── disponibilità magazzino ───────── */
@@ -101,11 +102,11 @@ function vProgetti() {
     <button class="prow az-${c.azienda_capofila === "Nakama" ? "nk" : "ch"}" data-open="${c.commessa_id}">
       <span><span class="code">${esc(codice(c))}</span></span>
       <span style="min-width:0"><span class="t">${esc(c.titolo_evento)}</span><br><span class="sub">${esc(org(c.cliente_org_id))}${c.agenzia_org_id ? " · via " + esc(org(c.agenzia_org_id)) : ""}${" · " + esc(locTxt(c, false))}</span></span>
-      <span class="sub c-who">PM ${esc(nome(c.pm_persona_id))}</span>
+      <span class="sub c-who">${esc(nome(c.pm_persona_id))}</span>
       <span class="sub c-dates mono">${fd(c.data_inizio)}${c.data_fine !== c.data_inizio ? "–" + fd(c.data_fine) : ""}</span>
       <span>${pill(c.stato, STATO_CLS[c.stato])}</span>
       <span class="arrow" aria-hidden="true">›</span>
-    </button>`).join("")}</div>` : `<div class="empty">Nessuna commessa in questo filtro.</div>`}`;
+    </button>`).join("")}</div>` : `<div class="empty">Nessuna commessa in questo filtro.<button class="linkbtn" data-filtro="tutte">Vedi tutte</button></div>`}`;
 }
 
 function vScheda() {
@@ -805,9 +806,9 @@ function vNuova() {
 function ncAvanti() {
   const n = S.nc;
   if (n.step === 1) {
-    if (!n.titolo.trim()) { toast("Scrivi il nome della commessa"); document.getElementById("nc-titolo")?.focus(); return; }
-    if (n.cliente === "nuovo" && !n.cliente_nuovo.trim()) { toast("Scrivi il nome del nuovo cliente"); return; }
-    if (n.al === n.dal && n.ora_fine <= n.ora_inizio) { toast("L'evento finisce prima di iniziare"); return; }
+    if (!n.titolo.trim()) { fieldError("nc-titolo", "Scrivi il nome della commessa"); return; }
+    if (n.cliente === "nuovo" && !n.cliente_nuovo.trim()) { fieldError("nc-cliente_nuovo", "Scrivi il nome del nuovo cliente"); return; }
+    if (n.al === n.dal && n.ora_fine <= n.ora_inizio) { fieldError("nc-ora_fine", "L'evento finisce prima di iniziare"); return; }
   }
   if (n.step === 3) {
     if (n.doc_modo === "collega" && !n.cartella) { toast("Scegli la cartella da collegare"); return; }
@@ -874,7 +875,7 @@ function vCalendario(l) {
   const byC = {}; pren.forEach(p => (byC[p.commessa_id] ||= []).push(p));
   const ev = Object.entries(byC).map(([cid, ps]) => ({ cid, ps, dal: ps.map(p => p.dal).sort()[0], al: ps.map(p => p.al).sort().at(-1), pend: ps.filter(p => p.stato === "richiesta").length }))
     .filter(e => ts(e.al) > A && ts(e.dal) < B).sort((x, y) => x.dal.localeCompare(y.dal));
-  const PX = 22;
+  const PX = 22, H0 = 6;
   const pend = D.PRENOTAZIONI.filter(p => p.stato === "richiesta");
   const groups = {}; pend.forEach(p => (groups[p.preventivo_id || p.commessa_id] ||= []).push(p));
   const sel = S.mag.ev && byC[S.mag.ev] ? S.mag.ev : null;
@@ -893,12 +894,12 @@ function vCalendario(l) {
   </div>
   <div class="wk-wrap"><div class="wk">
     <div class="wk-h"><span></span>${days.map(d => { const x = new Date(d + "T00:00"); return `<span class="${d === TODAY ? "today" : ""}">${GGL[(x.getDay() + 6) % 7]} <b>${x.getDate()}</b></span>`; }).join("")}</div>
-    <div class="wk-b" style="height:${24 * PX}px">
-      <div class="wk-hours">${Array.from({ length: 24 }, (_, i) => `<span style="top:${i * PX}px">${pad2(i)}</span>`).join("")}</div>
+    <div class="wk-b" style="height:${(24 - H0) * PX}px">
+      <div class="wk-hours">${Array.from({ length: 24 - H0 }, (_, i) => `<span style="top:${i * PX}px">${pad2(i + H0)}</span>`).join("")}</div>
       ${days.map(d => { const a = ts(d), b = ts(addDays(d, 1)); const L = ev.filter(e => ts(e.al) > a && ts(e.dal) < b);
-        return `<div class="wk-day">${Array.from({ length: 24 }, (_, i) => `<i style="top:${i * PX}px"></i>`).join("")}
+        return `<div class="wk-day">${Array.from({ length: 24 - H0 }, (_, i) => `<i style="top:${i * PX}px"></i>`).join("")}${d === TODAY ? `<div class="wk-now" style="top:${Math.max(0, (new Date().getHours() + new Date().getMinutes() / 60 - H0) * PX)}px"></div>` : ""}
         ${L.map((e, k) => { const st = Math.max(ts(e.dal), a), en = Math.min(ts(e.al), b), c = COM[e.cid], first = ts(e.dal) >= a;
-          return `<button class="wk-ev mev ${e.pend ? "pend" : ""} ${sel === e.cid ? "sel" : ""}" data-magev="${e.cid}" style="top:${(st - a) / 36e5 * PX}px;height:${Math.max(16, (en - st) / 36e5 * PX - 2)}px;left:${k / L.length * 100}%;width:${100 / L.length}%;--cc:${colOf(e.cid)}" title="${esc(codice(c) + " · " + c.titolo_evento)}"><b>${esc(codice(c))}</b> ${first ? esc(c.titolo_evento) : ""}<span>${e.ps.length} articoli${e.pend ? " · " + e.pend + " da confermare" : ""}</span></button>`; }).join("")}</div>`; }).join("")}
+          return `<button class="wk-ev mev ${e.pend ? "pend" : ""} ${sel === e.cid ? "sel" : ""}" data-magev="${e.cid}" style="top:${Math.max(0, ((st - a) / 36e5 - H0) * PX)}px;height:${Math.max(16, (en - Math.max(st, a + H0 * 36e5)) / 36e5 * PX - 2)}px;left:${k / L.length * 100}%;width:${100 / L.length}%;--cc:${colOf(e.cid)}" title="${esc(codice(c) + " · " + c.titolo_evento)}"><b>${esc(codice(c))}</b> ${first ? esc(c.titolo_evento) : ""}<span>${e.ps.length} articoli${e.pend ? " · " + e.pend + " da confermare" : ""}</span></button>`; }).join("")}</div>`; }).join("")}
     </div></div></div>
   ${sel ? (() => { const e = ev.find(x => x.cid === sel) || { cid: sel, ps: byC[sel], dal: byC[sel].map(p => p.dal).sort()[0], al: byC[sel].map(p => p.al).sort().at(-1) }, c = COM[sel]; return `
   <section class="panel" style="margin-top:12px"><h2><span><span class="code">${esc(codice(c))}</span> ${esc(c.titolo_evento)}</span><span class="muted">${fdt(e.dal)} → ${fdt(e.al)} · <button class="linkbtn" data-open="${sel}">scheda</button> · <button class="linkbtn" data-magev="">chiudi</button></span></h2>
@@ -990,7 +991,7 @@ function vLocation() {
       ${vistaToggle("loc", f.vista)}${addBtn("loc", "Location")}
     </div></div>
   ${S.locNew ? formLocation() : ""}
-  ${!rows.length ? `<div class="empty">Nessuna location con questi filtri.</div>` : f.vista === "righe" ? `<div class="plist">${rows.map(l => `
+  ${!rows.length ? `<div class="empty">Nessuna location con questi filtri.<button class="linkbtn" data-locreset="1">Togli i filtri</button></div>` : f.vista === "righe" ? `<div class="plist">${rows.map(l => `
     <button class="prow prow-a" data-locopen="${l.location_id}">
       <span><span class="t">${esc(l.nome)}</span>${isDemo(l) ? " " + pill("DEMO", "") : ""}<br><span class="sub">${esc([cap(lista(l.tipologia)[0] || ""), lista(l.stile).join(", ")].filter(Boolean).join(" · "))}</span></span>
       <span class="sub">${esc([l.citta, l.posizione].filter(Boolean).join(" · "))}</span>
@@ -1020,8 +1021,8 @@ function formLocation() {
   </div></form>`;
 }
 function salvaLocation() {
-  const n = S.locNew; if (!n.nome.trim()) { toast("Scrivi il nome della location"); document.getElementById("ln-nome")?.focus(); return; }
-  if (!n.citta.trim()) { toast("Scrivi la città"); document.getElementById("ln-citta")?.focus(); return; }
+  const n = S.locNew; if (!n.nome.trim()) { fieldError("ln-nome", "Scrivi il nome della location"); return; }
+  if (!n.citta.trim()) { fieldError("ln-citta", "Scrivi la città"); return; }
   const id = "LOC-" + String(D.LOCATION.reduce((m, l) => Math.max(m, +l.location_id.slice(4) || 0), 0) + 1).padStart(3, "0");
   const num = v => v === "" || v == null ? null : +v;
   const l = { location_id: id, nome: n.nome.trim(), alias: "", gestore_org_id: "", tramite_partner_org_id: "", agenzia_org_id: "", tipologia: n.tipologia, stile: "", spazio_esterno: n.spazio_esterno, eventi_adatti: "",
@@ -1104,7 +1105,7 @@ function vFornitori() {
       ${vistaToggle("forn", f.vista)}${addBtn("forn", "Fornitore")}
     </div></div>
   ${S.fornNew ? formFornitore() : ""}
-  ${!rows.length ? `<div class="empty">Nessun fornitore con questi filtri.</div>` : f.vista === "righe" ? `<div class="plist">${rows.map(o => { const fr = FORN[o.org_id] || {}; const ct = D.CONTATTI.find(c => c.org_id === o.org_id && c.principale === "sì");
+  ${!rows.length ? `<div class="empty">Nessun fornitore con questi filtri.<button class="linkbtn" data-fornreset="1">Togli i filtri</button></div>` : f.vista === "righe" ? `<div class="plist">${rows.map(o => { const fr = FORN[o.org_id] || {}; const ct = D.CONTATTI.find(c => c.org_id === o.org_id && c.principale === "sì");
     return `<button class="prow prow-a" data-fornopen="${o.org_id}">
       <span><span class="t">${esc(o.nome_breve)}</span>${isDemo(o) ? " " + pill("DEMO", "") : ""}<br><span class="sub">${esc(lista(fr.sottocategorie).join(", "))}</span></span>
       <span class="sub">${esc([fornCat(o).map(cap).join(", "), fr.tipo_fornitura].filter(Boolean).join(" · "))}</span>
@@ -1133,7 +1134,7 @@ function formFornitore() {
   </div></form>`;
 }
 function salvaFornitore() {
-  const n = S.fornNew; if (!n.nome.trim()) { toast("Scrivi il nome del fornitore"); document.getElementById("fn-nome")?.focus(); return; }
+  const n = S.fornNew; if (!n.nome.trim()) { fieldError("fn-nome", "Scrivi il nome del fornitore"); return; }
   const id = "ORG-" + String(D.ORGANIZZAZIONI.reduce((m, o) => Math.max(m, +o.org_id.slice(4) || 0), 0) + 1).padStart(3, "0");
   const o = { org_id: id, ragione_sociale: n.ragione_sociale.trim() || n.nome.trim(), nome_breve: n.nome.trim(), e_cliente: "no", e_agenzia: "no", e_partner: "no", e_fornitore: "sì", e_gestore_location: "no", stato: "attivo",
     partita_iva: n.partita_iva.trim(), citta: n.citta.trim(), paese: "Italia", sito: n.sito.trim(), telefono: "", email: "", fonte: "inserito in Doffy", note: n.note.trim() };
@@ -1183,7 +1184,37 @@ function vFornitoreScheda() {
   </div>`;
 }
 
+/* ── indirizzo della vista (hash) e preferenze ricordate ── */
+const PREF_KEY = "doffy.pref";
+function prefLoad() { try { const p = JSON.parse(localStorage.getItem(PREF_KEY) || "{}"); if (p.loc) Object.assign(S.loc, p.loc); if (p.forn) Object.assign(S.forn, p.forn); if (p.filtro) S.filtro = p.filtro; if (p.calMag) S.mag.calMag = p.calMag; if (p.calTab) S.cal.tab = p.calTab; } catch (e) {} }
+function prefSave() { try { localStorage.setItem(PREF_KEY, JSON.stringify({ loc: { vista: S.loc.vista, citta: S.loc.citta, tipo: S.loc.tipo }, forn: { vista: S.forn.vista, cat: S.forn.cat }, filtro: S.filtro, calMag: S.mag.calMag, calTab: S.cal.tab })); } catch (e) {} }
+function routeOf() {
+  const v = S.view;
+  if (v === "scheda" && S.comm && COM[S.comm]) return `/commessa/${encodeURIComponent(codice(COM[S.comm]))}/${S.stab}`;
+  if (v === "locscheda" && S.locId) return `/location/${S.locId}`;
+  if (v === "fornscheda" && S.fornId) return `/fornitori/${S.fornId}`;
+  if (v === "magazzino") return `/magazzino/${S.mag.tab || "calendario"}`;
+  if (v === "cal") return `/calendario/${S.cal.tab}`;
+  return "/" + (v === "progetti" ? "" : v);
+}
+let ROUTING = false;
+function applyRoute(h) {
+  const parts = (h || "").replace(/^#\/?/, "").split("/").map(decodeURIComponent).filter(Boolean);
+  const [a, b, c] = parts;
+  if (!a) { S.view = "progetti"; return; }
+  if (a === "commessa") { const cm = D.COMMESSE.find(x => codice(x) === b || x.commessa_id === b); if (cm) { S.comm = cm.commessa_id; S.view = "scheda"; S.stab = c && TABS_ALL.includes(c) ? c : "overview"; return; } }
+  if (a === "location") { if (b && LOC[b]) { S.locId = b; S.view = "locscheda"; } else S.view = "location"; return; }
+  if (a === "fornitori") { if (b && ORG[b]) { S.fornId = b; S.view = "fornscheda"; } else S.view = "fornitori"; return; }
+  if (a === "magazzino") { S.view = "magazzino"; if (b) S.mag.tab = b; return; }
+  if (a === "calendario") { S.view = "cal"; if (b) S.cal.tab = b; return; }
+  if (["nuova", "todo", "progetti"].includes(a)) { S.view = a; if (a === "nuova") S.nc = null; return; }
+  S.view = "progetti";
+}
+const TABS_ALL = ["overview", "prev", "persone", "materiale", "produzione", "viaggi", "ordini", "file", "sicurezza", "todo"];
+window.addEventListener("hashchange", () => { if (ROUTING) return; applyRoute(location.hash); render(); window.scrollTo(0, 0); });
 function render() {
+  const want = "#" + routeOf(); if (location.hash !== want && !(location.hash === "" && want === "#/")) { ROUTING = true; history.pushState(null, "", want); ROUTING = false; }
+  prefSave();
   const nb = document.querySelector(".new-btn"); if (nb) { nb.hidden = !canCreate(); nb.setAttribute("aria-current", S.view === "nuova" ? "page" : "false"); }
   document.querySelectorAll("[data-nav]").forEach(b => b.closest("nav") && b.setAttribute("aria-current", (S.view === b.dataset.nav || (S.view === "scheda" && b.dataset.nav === "progetti") || (S.view === "locscheda" && b.dataset.nav === "location") || (S.view === "fornscheda" && b.dataset.nav === "fornitori")) ? "page" : "false"));
   const el = document.getElementById("main");
@@ -1208,13 +1239,15 @@ const addRow = (r, label) => { const pv = curPV(); const ex = pv.righe.find(x =>
 const evDays = () => { const c = COM[S.comm]; return giorni(c.data_inizio, c.data_fine); };
 
 document.addEventListener("click", e => {
-  const t = e.target.closest("[data-locnew],[data-fornnew],[data-nctipo],[data-locopen],[data-fornopen],[data-locf],[data-fornf],[data-nav],[data-open],[data-filtro],[data-tmine],[data-tstato],[data-conferma],[data-confall],[data-mtab],[data-pvcreate],[data-pvopen],[data-src],[data-addinv],[data-addloc],[data-addlis],[data-addgra],[data-rm],[data-ropz],[data-ralt],[data-pvact],[data-calnav],[data-calgo],[data-stab],[data-reqtoggle],[data-confsel],[data-magev],[data-art],[data-artclose],[data-dir],[data-file],[data-sez],[data-genpiano],[data-slconf],[data-slopz],[data-sloff],[data-sladd],[data-fbrm],[data-fbprev],[data-ctab],[data-wk],[data-wkgo],[data-mese],[data-mesego],[data-calpp],[data-ncstep],[data-ncsk],[data-ncdoc],[data-ncrm]");
+  const t = e.target.closest("[data-locreset],[data-fornreset],[data-locnew],[data-fornnew],[data-nctipo],[data-locopen],[data-fornopen],[data-locf],[data-fornf],[data-nav],[data-open],[data-filtro],[data-tmine],[data-tstato],[data-conferma],[data-confall],[data-mtab],[data-pvcreate],[data-pvopen],[data-src],[data-addinv],[data-addloc],[data-addlis],[data-addgra],[data-rm],[data-ropz],[data-ralt],[data-pvact],[data-calnav],[data-calgo],[data-stab],[data-reqtoggle],[data-confsel],[data-magev],[data-art],[data-artclose],[data-dir],[data-file],[data-sez],[data-genpiano],[data-slconf],[data-slopz],[data-sloff],[data-sladd],[data-fbrm],[data-fbprev],[data-ctab],[data-wk],[data-wkgo],[data-mese],[data-mesego],[data-calpp],[data-ncstep],[data-ncsk],[data-ncdoc],[data-ncrm]");
   if (!t) return;
   const d = t.dataset;
   if (d.nctipo) { S.nc.tipo = d.nctipo; render(); document.querySelector(`[data-nctipo="${d.nctipo}"]`)?.focus(); return; }
   if (d.locopen) { S.locId = d.locopen; S.view = "locscheda"; render(); window.scrollTo(0, 0); return; }
   if (d.fornopen) { S.fornId = d.fornopen; S.view = "fornscheda"; render(); window.scrollTo(0, 0); return; }
   if (d.locf === "esterno") { S.loc.esterno = !S.loc.esterno; render(); return; }
+  if (d.locreset) { Object.assign(S.loc, { q: "", citta: "", tipo: "", pax: "", esterno: false }); render(); return; }
+  if (d.fornreset) { Object.assign(S.forn, { q: "", cat: "" }); render(); return; }
   if (d.locf === "vista") { S.loc.vista = d.v; render(); return; }
   if (d.fornf === "vista") { S.forn.vista = d.v; render(); return; }
   if (d.locnew != null) { S.locNew = d.locnew === "1" ? { nome: "", tipologia: "", indirizzo: "", citta: "", mq: "", capienza_standing: "", capienza_seduti: "", costo_giorno_evento: "", costo_setup: "", spazio_esterno: "no", referente_nome: "", referente_telefono: "", referente_email: "", sito: "", note: "" } : null; render(); document.getElementById("ln-nome")?.focus(); return; }
@@ -1343,4 +1376,4 @@ document.addEventListener("input", e => {
   const t = e.target;
   if (t.dataset.m === "q") { S.mag.q = t.value; const pos = t.selectionStart; render(); const n = document.getElementById("m-q"); n.focus(); n.setSelectionRange(pos, pos); }
 });
-render();
+prefLoad(); applyRoute(location.hash); render();
