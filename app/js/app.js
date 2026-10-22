@@ -7,7 +7,7 @@ const PER = idx("PERSONE", "persona_id"), ORG = idx("ORGANIZZAZIONI", "org_id"),
       SEGN = idx("SEGNALAZIONI", "segnalazione_id"), FILES = idx("FILE", "file_id"), RIS = Object.fromEntries(D.RIASSUNTI.map(r => [r.oggetto_id, r]));
 PER.P01 && Object.assign(PER.P01, { nome: "Utenza", cognome: "master" });
 const USERS = ["P04", "P09", "P11", "P02", "P01"];
-const S = { user: "P01", view: "progetti", comm: null, stab: "overview", dir: "", fileOpen: null, art: null, pvHide: new Set(), pvTool: null, pvRow: null, filtro: "attive", mag: { tab: null, open: null, ev: null, sel: new Set(), calMag: "MAG-C", calDa: "2026-11-09", solo: true, dal: "2026-11-11", al: "2026-11-13", mag: "tutti", cat: "tutte", q: "" }, todo: { mine: false, stato: "aperti" }, cal: { tab: "generale", p: null, da: "2026-11-09", mese: "2026-11" }, nc: null, src: "inv", check: null, loc: { q: "", citta: "", tipo: "", pax: "", esterno: false }, locId: null, forn: { q: "", cat: "" }, fornId: null };
+const S = { user: "P01", view: "progetti", comm: null, stab: "overview", dir: "", fileOpen: null, art: null, pvHide: new Set(), pvTool: null, pvRow: null, filtro: "attive", mag: { tab: null, open: null, ev: null, sel: new Set(), calMag: "MAG-C", calDa: "2026-11-09", solo: true, dal: "2026-11-11", al: "2026-11-13", mag: "tutti", cat: "tutte", q: "" }, todo: { mine: false, stato: "aperti" }, cal: { tab: "generale", p: null, da: "2026-11-09", mese: "2026-11" }, nc: null, src: "inv", check: null, loc: { q: "", citta: "", tipo: "", pax: "", esterno: false, vista: "blocchi" }, locId: null, locNew: null, forn: { q: "", cat: "", vista: "blocchi" }, fornId: null, fornNew: null };
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const MESI = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
@@ -963,6 +963,8 @@ const fattoDi = (lbl, v) => v == null || v === "" ? "" : `<div><div class="lbl">
 const contatto = (nome, tel, mail) => [nome, tel, mail].some(Boolean) ? `${esc(nome || "")}${tel ? ` <a href="tel:${esc(String(tel).split(" · ")[0])}">${esc(tel)}</a>` : ""}${mail ? ` <a href="mailto:${esc(String(mail).split(" · ")[0])}">${esc(mail)}</a>` : ""}` : "";
 const linkEsterno = (url, txt) => url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(txt || url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/.*$/, ""))}</a>` : "";
 const isDemo = r => /^DEMO/.test(r.note || "");
+const vistaToggle = (k, v) => `<div class="seg" role="group" aria-label="Vista">${[["blocchi", "Blocchi", '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'], ["righe", "Righe", '<path d="M4 6h16M4 12h16M4 18h16"/>']].map(([x, t, ic]) => `<button type="button" data-${k}f="vista" data-v="${x}" aria-pressed="${v === x}" title="${t}" aria-label="${t}"><svg viewBox="0 0 24 24" aria-hidden="true">${ic}</svg></button>`).join("")}</div>`;
+const addBtn = (k, t) => `<button class="btn" data-${k}new="1">+ ${t}</button>`;
 
 /* location */
 const locCitta = l => l.citta || "";
@@ -985,14 +987,48 @@ function vLocation() {
       <select data-locf="tipo" aria-label="Tipologia"><option value="">Ogni tipologia</option>${tipi.map(t => `<option value="${esc(t)}" ${f.tipo === t ? "selected" : ""}>${esc(cap(t))}</option>`).join("")}</select>
       <input type="number" class="pax" data-locf="pax" value="${esc(f.pax)}" min="0" step="10" placeholder="Pax" aria-label="Persone minime">
       <button class="chip" data-locf="esterno" aria-pressed="${f.esterno}">Spazio esterno</button>
+      ${vistaToggle("loc", f.vista)}${addBtn("loc", "Location")}
     </div></div>
-  ${rows.length ? `<div class="cards">${rows.map(l => `
+  ${S.locNew ? formLocation() : ""}
+  ${!rows.length ? `<div class="empty">Nessuna location con questi filtri.</div>` : f.vista === "righe" ? `<div class="plist">${rows.map(l => `
+    <button class="prow prow-a" data-locopen="${l.location_id}">
+      <span><span class="t">${esc(l.nome)}</span>${isDemo(l) ? " " + pill("DEMO", "") : ""}<br><span class="sub">${esc([cap(lista(l.tipologia)[0] || ""), lista(l.stile).join(", ")].filter(Boolean).join(" · "))}</span></span>
+      <span class="sub">${esc([l.citta, l.posizione].filter(Boolean).join(" · "))}</span>
+      <span class="num sub">${l.mq ? num0(l.mq) + " mq" : ""}</span>
+      <span class="num sub">${l.capienza_standing ? num0(l.capienza_standing) + " in piedi" : ""}${l.capienza_seduti ? ` · ${num0(l.capienza_seduti)} seduti` : ""}</span>
+      <span class="num">${l.costo_giorno_evento ? eur(l.costo_giorno_evento) : ""}</span>
+    </button>`).join("")}</div>` : `<div class="cards">${rows.map(l => `
     <button class="card" data-locopen="${l.location_id}">
       <div class="card-h"><b>${esc(l.nome)}</b>${isDemo(l) ? pill("DEMO", "") : ""}${l.residente === "sì" ? pill("residente", "p-acc") : ""}</div>
       <div class="card-sub">${esc([cap(lista(l.tipologia)[0] || ""), l.citta, l.posizione].filter(Boolean).join(" · "))}</div>
       <div class="card-tags">${lista(l.stile).slice(0, 3).map(s => `<span class="tag">${esc(s)}</span>`).join("")}${l.spazio_esterno && l.spazio_esterno !== "no" ? `<span class="tag">${esc(l.spazio_esterno)}</span>` : ""}</div>
       <div class="card-nums">${l.mq ? `<span><b>${num0(l.mq)}</b> mq</span>` : ""}${l.capienza_standing ? `<span><b>${num0(l.capienza_standing)}</b> in piedi</span>` : ""}${l.capienza_seduti ? `<span><b>${num0(l.capienza_seduti)}</b> seduti</span>` : ""}${l.costo_giorno_evento ? `<span><b>${eur(l.costo_giorno_evento)}</b> /giorno</span>` : ""}</div>
-    </button>`).join("")}</div>` : `<div class="empty">Nessuna location con questi filtri.</div>`}`;
+    </button>`).join("")}</div>`}`;
+}
+function formLocation() {
+  const n = S.locNew, F = (k, label, html) => `<div class="field"><label class="lbl" for="ln-${k}">${label}</label>${html}</div>`;
+  const inp = (k, type = "text", extra = "") => `<input type="${type}" id="ln-${k}" value="${esc(n[k])}" data-ln="${k}" ${extra}>`;
+  const sel = (k, opts, ph) => `<select id="ln-${k}" data-ln="${k}">${ph != null ? `<option value="">${ph}</option>` : ""}${opts.map(v => `<option ${n[k] === v ? "selected" : ""}>${esc(v)}</option>`).join("")}</select>`;
+  return `<form id="lnform" class="panel form-new" novalidate><h2>Nuova location</h2><div class="form">
+    <div class="row">${F("nome", "Nome", inp("nome", "text", 'required autocomplete="off"'))}${F("tipologia", "Tipologia", sel("tipologia", ["location", "loft", "open space", "palazzo", "museo", "hotel", "ristorante", "club", "villa", "cascina", "showroom", "galleria", "auditorium", "teatro", "serra", "altro"], "Scegli…"))}</div>
+    <div class="row">${F("indirizzo", "Indirizzo", inp("indirizzo"))}${F("citta", "Città", inp("citta", "text", 'required'))}</div>
+    <div class="row3">${F("mq", "mq", inp("mq", "number", 'min="0"'))}${F("capienza_standing", "In piedi", inp("capienza_standing", "number", 'min="0"'))}${F("capienza_seduti", "Seduti", inp("capienza_seduti", "number", 'min="0"'))}</div>
+    <div class="row3">${F("costo_giorno_evento", "Costo evento (€/giorno)", inp("costo_giorno_evento", "number", 'min="0" step="50"'))}${F("costo_setup", "Costo setup (€/giorno)", inp("costo_setup", "number", 'min="0" step="50"'))}${F("spazio_esterno", "Spazio esterno", sel("spazio_esterno", ["no", "cortile", "terrazza", "giardino/chiostro"]))}</div>
+    <div class="row3">${F("referente_nome", "Referente", inp("referente_nome"))}${F("referente_telefono", "Telefono", inp("referente_telefono", "tel"))}${F("referente_email", "Email", inp("referente_email", "email"))}</div>
+    <div class="row">${F("sito", "Sito", inp("sito", "url", 'placeholder="https://"'))}${F("note", "Note", inp("note"))}</div>
+    <div class="actions"><button class="btn" type="submit">Salva location</button><button class="btn ghost" type="button" data-locnew="0">Annulla</button></div>
+  </div></form>`;
+}
+function salvaLocation() {
+  const n = S.locNew; if (!n.nome.trim()) { toast("Scrivi il nome della location"); document.getElementById("ln-nome")?.focus(); return; }
+  if (!n.citta.trim()) { toast("Scrivi la città"); document.getElementById("ln-citta")?.focus(); return; }
+  const id = "LOC-" + String(D.LOCATION.reduce((m, l) => Math.max(m, +l.location_id.slice(4) || 0), 0) + 1).padStart(3, "0");
+  const num = v => v === "" || v == null ? null : +v;
+  const l = { location_id: id, nome: n.nome.trim(), alias: "", gestore_org_id: "", tramite_partner_org_id: "", agenzia_org_id: "", tipologia: n.tipologia, stile: "", spazio_esterno: n.spazio_esterno, eventi_adatti: "",
+    indirizzo: n.indirizzo.trim(), cap: "", citta: n.citta.trim(), provincia: "", regione: "", paese: "Italia", posizione: "", metro_15min: "", residente: "no", stato: "attiva", numero_sale: null,
+    mq: num(n.mq), capienza_standing: num(n.capienza_standing), capienza_seduti: num(n.capienza_seduti), costo_giorno_evento: num(n.costo_giorno_evento), costo_setup: num(n.costo_setup),
+    referente_nome: n.referente_nome.trim(), referente_telefono: n.referente_telefono.trim(), referente_email: n.referente_email.trim(), sito: n.sito.trim(), note: n.note.trim(), creata_da: S.user, creata_il: TODAY };
+  D.LOCATION.push(l); LOC[id] = l; S.locNew = null; S.locId = id; S.view = "locscheda"; render(); window.scrollTo(0, 0); toast(`${l.nome} aggiunta alle location`);
 }
 function vLocationScheda() {
   const l = LOC[S.locId]; if (!l) { S.view = "location"; return vLocation(); }
@@ -1065,14 +1101,47 @@ function vFornitori() {
     <div class="filters" role="group" aria-label="Filtri">
       <input type="search" class="search" data-fornf="q" value="${esc(f.q)}" placeholder="Cerca nome, città, specialità…" aria-label="Cerca">
       ${cats.map(c => `<button class="chip" data-fornf="cat" data-v="${esc(c)}" aria-pressed="${f.cat === c}">${esc(cap(c))}</button>`).join("")}
+      ${vistaToggle("forn", f.vista)}${addBtn("forn", "Fornitore")}
     </div></div>
-  ${rows.length ? `<div class="cards">${rows.map(o => { const fr = FORN[o.org_id] || {}; const ct = D.CONTATTI.find(c => c.org_id === o.org_id && c.principale === "sì");
+  ${S.fornNew ? formFornitore() : ""}
+  ${!rows.length ? `<div class="empty">Nessun fornitore con questi filtri.</div>` : f.vista === "righe" ? `<div class="plist">${rows.map(o => { const fr = FORN[o.org_id] || {}; const ct = D.CONTATTI.find(c => c.org_id === o.org_id && c.principale === "sì");
+    return `<button class="prow prow-a" data-fornopen="${o.org_id}">
+      <span><span class="t">${esc(o.nome_breve)}</span>${isDemo(o) ? " " + pill("DEMO", "") : ""}<br><span class="sub">${esc(lista(fr.sottocategorie).join(", "))}</span></span>
+      <span class="sub">${esc([fornCat(o).map(cap).join(", "), fr.tipo_fornitura].filter(Boolean).join(" · "))}</span>
+      <span class="sub">${esc(o.citta || "")}</span>
+      <span class="sub">${ct ? esc(ct.nome + " " + ct.cognome) : esc(o.telefono || "")}</span>
+      <span class="num">${fr.sconto_ricevuto ? fr.sconto_ricevuto + "%" : ""}</span>
+    </button>`; }).join("")}</div>` : `<div class="cards">${rows.map(o => { const fr = FORN[o.org_id] || {}; const ct = D.CONTATTI.find(c => c.org_id === o.org_id && c.principale === "sì");
     return `<button class="card" data-fornopen="${o.org_id}">
       <div class="card-h"><b>${esc(o.nome_breve)}</b>${isDemo(o) ? pill("DEMO", "") : ""}${fr.sconto_ricevuto ? pill(`sconto ${fr.sconto_ricevuto}%`, "p-ok") : ""}</div>
       <div class="card-sub">${esc([fornCat(o).map(cap).join(", "), fr.tipo_fornitura, o.citta].filter(Boolean).join(" · "))}</div>
       <div class="card-tags">${lista(fr.sottocategorie).slice(0, 4).map(s => `<span class="tag">${esc(s)}</span>`).join("")}${o.e_partner === "sì" ? `<span class="tag">${esc(o.tipo_partner || "partner")}</span>` : ""}</div>
       <div class="card-nums">${ct ? `<span>${esc(ct.nome + " " + ct.cognome)}</span>` : o.telefono ? `<span>${esc(o.telefono)}</span>` : ""}</div>
-    </button>`; }).join("")}</div>` : `<div class="empty">Nessun fornitore con questi filtri.</div>`}`;
+    </button>`; }).join("")}</div>`}`;
+}
+function formFornitore() {
+  const n = S.fornNew, F = (k, label, html) => `<div class="field"><label class="lbl" for="fn-${k}">${label}</label>${html}</div>`;
+  const inp = (k, type = "text", extra = "") => `<input type="${type}" id="fn-${k}" value="${esc(n[k])}" data-fn="${k}" ${extra}>`;
+  const sel = (k, opts, ph) => `<select id="fn-${k}" data-fn="${k}">${ph != null ? `<option value="">${ph}</option>` : ""}${opts.map(v => `<option ${n[k] === v ? "selected" : ""}>${esc(v)}</option>`).join("")}</select>`;
+  return `<form id="fnform" class="panel form-new" novalidate><h2>Nuovo fornitore</h2><div class="form">
+    <div class="row">${F("nome", "Nome", inp("nome", "text", 'required autocomplete="off"'))}${F("ragione_sociale", "Ragione sociale", inp("ragione_sociale"))}</div>
+    <div class="row3">${F("categoria", "Categoria", sel("categoria", ["service", "allestimenti", "personale", "mezzi", "catering", "grafiche", "certificazioni", "location", "altro"], "Scegli…"))}${F("tipo_fornitura", "Fornitura", sel("tipo_fornitura", ["noleggio", "vendita", "servizio"], "—"))}${F("sottocategorie", "Specialità", inp("sottocategorie", "text", 'placeholder="audio, luci, strutture…"'))}</div>
+    <div class="row3">${F("citta", "Città", inp("citta"))}${F("partita_iva", "Partita IVA", inp("partita_iva"))}${F("sconto_ricevuto", "Sconto a noi (%)", inp("sconto_ricevuto", "number", 'min="0" max="100"'))}</div>
+    <div class="row3">${F("ref_nome", "Referente", inp("ref_nome"))}${F("ref_telefono", "Telefono", inp("ref_telefono", "tel"))}${F("ref_email", "Email", inp("ref_email", "email"))}</div>
+    <div class="row">${F("sito", "Sito", inp("sito", "url", 'placeholder="https://"'))}${F("note", "Note", inp("note"))}</div>
+    <div class="actions"><button class="btn" type="submit">Salva fornitore</button><button class="btn ghost" type="button" data-fornnew="0">Annulla</button></div>
+  </div></form>`;
+}
+function salvaFornitore() {
+  const n = S.fornNew; if (!n.nome.trim()) { toast("Scrivi il nome del fornitore"); document.getElementById("fn-nome")?.focus(); return; }
+  const id = "ORG-" + String(D.ORGANIZZAZIONI.reduce((m, o) => Math.max(m, +o.org_id.slice(4) || 0), 0) + 1).padStart(3, "0");
+  const o = { org_id: id, ragione_sociale: n.ragione_sociale.trim() || n.nome.trim(), nome_breve: n.nome.trim(), e_cliente: "no", e_agenzia: "no", e_partner: "no", e_fornitore: "sì", e_gestore_location: "no", stato: "attivo",
+    partita_iva: n.partita_iva.trim(), citta: n.citta.trim(), paese: "Italia", sito: n.sito.trim(), telefono: "", email: "", fonte: "inserito in Doffy", note: n.note.trim() };
+  D.ORGANIZZAZIONI.push(o); ORG[id] = o;
+  const f = { org_id: id, categorie: n.categoria || "altro", tipo_fornitura: n.tipo_fornitura, sottocategorie: n.sottocategorie.trim(), sconto_ricevuto: n.sconto_ricevuto === "" ? null : +n.sconto_ricevuto, durc_scadenza: "", documenti_ok: "", valutazione: null, note: "" };
+  D.FORNITORI.push(f); FORN[id] = f;
+  if (n.ref_nome.trim()) { const [nm, ...cg] = n.ref_nome.trim().split(" "); D.CONTATTI.push({ contatto_id: "CT-" + String(D.CONTATTI.length + 1).padStart(2, "0"), org_id: id, nome: nm, cognome: cg.join(" "), ruolo: "commerciale", email: n.ref_email.trim(), telefono: n.ref_telefono.trim(), principale: "sì" }); }
+  S.fornNew = null; S.fornId = id; S.view = "fornscheda"; render(); window.scrollTo(0, 0); toast(`${o.nome_breve} aggiunto ai fornitori`);
 }
 function vFornitoreScheda() {
   const o = ORG[S.fornId]; if (!o) { S.view = "fornitori"; return vFornitori(); }
@@ -1139,13 +1208,17 @@ const addRow = (r, label) => { const pv = curPV(); const ex = pv.righe.find(x =>
 const evDays = () => { const c = COM[S.comm]; return giorni(c.data_inizio, c.data_fine); };
 
 document.addEventListener("click", e => {
-  const t = e.target.closest("[data-nctipo],[data-locopen],[data-fornopen],[data-locf],[data-fornf],[data-nav],[data-open],[data-filtro],[data-tmine],[data-tstato],[data-conferma],[data-confall],[data-mtab],[data-pvcreate],[data-pvopen],[data-src],[data-addinv],[data-addloc],[data-addlis],[data-addgra],[data-rm],[data-ropz],[data-ralt],[data-pvact],[data-calnav],[data-calgo],[data-stab],[data-reqtoggle],[data-confsel],[data-magev],[data-art],[data-artclose],[data-dir],[data-file],[data-sez],[data-genpiano],[data-slconf],[data-slopz],[data-sloff],[data-sladd],[data-fbrm],[data-fbprev],[data-ctab],[data-wk],[data-wkgo],[data-mese],[data-mesego],[data-calpp],[data-ncstep],[data-ncsk],[data-ncdoc],[data-ncrm]");
+  const t = e.target.closest("[data-locnew],[data-fornnew],[data-nctipo],[data-locopen],[data-fornopen],[data-locf],[data-fornf],[data-nav],[data-open],[data-filtro],[data-tmine],[data-tstato],[data-conferma],[data-confall],[data-mtab],[data-pvcreate],[data-pvopen],[data-src],[data-addinv],[data-addloc],[data-addlis],[data-addgra],[data-rm],[data-ropz],[data-ralt],[data-pvact],[data-calnav],[data-calgo],[data-stab],[data-reqtoggle],[data-confsel],[data-magev],[data-art],[data-artclose],[data-dir],[data-file],[data-sez],[data-genpiano],[data-slconf],[data-slopz],[data-sloff],[data-sladd],[data-fbrm],[data-fbprev],[data-ctab],[data-wk],[data-wkgo],[data-mese],[data-mesego],[data-calpp],[data-ncstep],[data-ncsk],[data-ncdoc],[data-ncrm]");
   if (!t) return;
   const d = t.dataset;
   if (d.nctipo) { S.nc.tipo = d.nctipo; render(); document.querySelector(`[data-nctipo="${d.nctipo}"]`)?.focus(); return; }
   if (d.locopen) { S.locId = d.locopen; S.view = "locscheda"; render(); window.scrollTo(0, 0); return; }
   if (d.fornopen) { S.fornId = d.fornopen; S.view = "fornscheda"; render(); window.scrollTo(0, 0); return; }
   if (d.locf === "esterno") { S.loc.esterno = !S.loc.esterno; render(); return; }
+  if (d.locf === "vista") { S.loc.vista = d.v; render(); return; }
+  if (d.fornf === "vista") { S.forn.vista = d.v; render(); return; }
+  if (d.locnew != null) { S.locNew = d.locnew === "1" ? { nome: "", tipologia: "", indirizzo: "", citta: "", mq: "", capienza_standing: "", capienza_seduti: "", costo_giorno_evento: "", costo_setup: "", spazio_esterno: "no", referente_nome: "", referente_telefono: "", referente_email: "", sito: "", note: "" } : null; render(); document.getElementById("ln-nome")?.focus(); return; }
+  if (d.fornnew != null) { S.fornNew = d.fornnew === "1" ? { nome: "", ragione_sociale: "", categoria: "", tipo_fornitura: "", sottocategorie: "", citta: "", partita_iva: "", sconto_ricevuto: "", ref_nome: "", ref_telefono: "", ref_email: "", sito: "", note: "" } : null; render(); document.getElementById("fn-nome")?.focus(); return; }
   if (d.fornf === "cat") { S.forn.cat = S.forn.cat === d.v ? "" : d.v; render(); return; }
   if (t.matches("input,select")) return;
   if (d.nav) { if (d.nav === "nuova") S.nc = null; S.view = d.nav; render(); window.scrollTo(0, 0); }
@@ -1219,6 +1292,8 @@ document.getElementById("modal").addEventListener("click", e => { if (e.target.i
 document.addEventListener("keydown", e => { if (e.key === "Escape" && S.art) { S.art = null; render(); } });
 document.addEventListener("click", e => { const sm = e.target.closest("summary[data-pvtool]"); if (sm) { e.preventDefault(); S.pvTool = S.pvTool === sm.dataset.pvtool ? null : sm.dataset.pvtool; render(); } });
 document.addEventListener("submit", e => {
+  if (e.target.id === "lnform") { e.preventDefault(); salvaLocation(); return; }
+  if (e.target.id === "fnform") { e.preventDefault(); salvaFornitore(); return; }
   if (e.target.id === "ncform") { e.preventDefault(); ncAvanti(); return; }
   if (e.target.id === "fbform") { e.preventDefault(); const cid = e.target.dataset.cid, r = document.getElementById("fb-ruolo").value.trim(), q = Math.max(1, Math.min(20, +document.getElementById("fb-q").value || 1));
     const fasi = [...e.target.querySelectorAll('input[name="fbf"]:checked')].map(x => x.value); if (!r || !fasi.length) { toast("Scrivi il ruolo e scegli almeno una fase"); return; }
@@ -1230,6 +1305,8 @@ document.addEventListener("submit", e => {
 });
 document.addEventListener("change", e => {
   const t = e.target, d = t.dataset;
+  if (d.ln) { S.locNew[d.ln] = t.value; return; }
+  if (d.fn) { S.fornNew[d.fn] = t.value; return; }
   if (d.locf && d.locf !== "esterno") { S.loc[d.locf] = t.value; render(); return; }
   if (d.fornf === "q") { S.forn.q = t.value; render(); return; }
   if (d.todo) { const x = D.TODO_CLICKUP.find(y => y.clickup_task_id === d.todo); x.stato = t.checked ? "fatto" : "da fare"; render(); toast(t.checked ? "Segnato come fatto" : "Riaperto"); }
