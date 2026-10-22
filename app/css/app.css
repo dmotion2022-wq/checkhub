@@ -475,3 +475,22 @@ button.drow:hover,.dfile:hover{background:var(--surface-2)}
 label.drow{cursor:pointer}
 label.drow.dis{cursor:default;opacity:.6}
 label.drow > span:first-of-type{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* anagrafiche a schede: location e fornitori */
+.filters .search{min-width:200px;flex:1 1 200px}
+.filters .pax{width:76px}
+.filters select{max-width:180px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.card{display:flex;flex-direction:column;gap:5px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;color:var(--fg);min-width:0}
+.card:hover{background:var(--surface-2);border-color:var(--line-2)}
+.card:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.card-h{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:.8125rem}
+.card-h b{overflow-wrap:anywhere}
+.card-sub{color:var(--muted);font-size:.75rem}
+.card-tags{display:flex;flex-wrap:wrap;gap:4px}
+.card-nums{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.75rem;color:var(--muted);margin-top:auto;font-variant-numeric:tabular-nums}
+.card-nums b{color:var(--fg);font-weight:600}
+.facts.bare{border:0;padding:0;background:none}
+.row-c{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;padding:4px 0;border-top:1px solid var(--line)}
+.row-c:first-child{border-top:0}
+.plist .prow{text-align:left;background:none;border-left:0;border-right:0;border-bottom:0;width:100%;color:var(--fg)}

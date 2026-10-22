@@ -1,12 +1,13 @@
 // Doffy · applicazione (demo, dati locali in data.js)
 const TODAY = "2026-10-18";
+if (window.D_LOCAL) Object.assign(D, window.D_LOCAL);   // dati reali locali (js/data.local.js), se presenti
 const idx = (t, k) => Object.fromEntries((D[t] || []).map(r => [r[k], r]));
 const PER = idx("PERSONE", "persona_id"), ORG = idx("ORGANIZZAZIONI", "org_id"), COM = idx("COMMESSE", "commessa_id"),
       LOC = idx("LOCATION", "location_id"), MAG = idx("MAGAZZINI", "magazzino_id"), ART = idx("ARTICOLI", "articolo_id"),
       SEGN = idx("SEGNALAZIONI", "segnalazione_id"), FILES = idx("FILE", "file_id"), RIS = Object.fromEntries(D.RIASSUNTI.map(r => [r.oggetto_id, r]));
 PER.P01 && Object.assign(PER.P01, { nome: "Utenza", cognome: "master" });
 const USERS = ["P04", "P09", "P11", "P02", "P01"];
-const S = { user: "P01", view: "progetti", comm: null, stab: "overview", dir: "", fileOpen: null, art: null, pvHide: new Set(), pvTool: null, pvRow: null, filtro: "attive", mag: { tab: null, open: null, ev: null, sel: new Set(), calMag: "MAG-C", calDa: "2026-11-09", solo: true, dal: "2026-11-11", al: "2026-11-13", mag: "tutti", cat: "tutte", q: "" }, todo: { mine: false, stato: "aperti" }, cal: { tab: "generale", p: null, da: "2026-11-09", mese: "2026-11" }, nc: null, src: "inv", check: null };
+const S = { user: "P01", view: "progetti", comm: null, stab: "overview", dir: "", fileOpen: null, art: null, pvHide: new Set(), pvTool: null, pvRow: null, filtro: "attive", mag: { tab: null, open: null, ev: null, sel: new Set(), calMag: "MAG-C", calDa: "2026-11-09", solo: true, dal: "2026-11-11", al: "2026-11-13", mag: "tutti", cat: "tutte", q: "" }, todo: { mine: false, stato: "aperti" }, cal: { tab: "generale", p: null, da: "2026-11-09", mese: "2026-11" }, nc: null, src: "inv", check: null, loc: { q: "", citta: "", tipo: "", pax: "", esterno: false }, locId: null, forn: { q: "", cat: "" }, fornId: null };
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const MESI = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
@@ -948,6 +949,165 @@ function stripHTML(pv, T) {
       <div><div class="lbl">Versione</div><div class="v">v${pv.ver} <span class="small muted">${versioni.length ? `· ${versioni.length} su Drive` : "· non ancora su Drive"}</span></div></div>
       <div class="pv-actions">${ed ? `<button class="btn" data-pvact="versione" ${pv.righe.length ? "" : "disabled"}>Salva nuova versione</button>` : ""}${pvActions(pv, T.blocchi || 0, D.PRENOTAZIONI.filter(p => p.preventivo_id === pv.id))}</div>`;
 }
+/* ── anagrafiche: location e fornitori ── */
+const lista = v => String(v || "").split(",").map(x => x.trim()).filter(Boolean);
+const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+const num0 = v => (v == null || v === "") ? "" : Number(v).toLocaleString("it-IT");
+const fattoDi = (lbl, v) => v == null || v === "" ? "" : `<div><div class="lbl">${lbl}</div><div class="v">${v}</div></div>`;
+const contatto = (nome, tel, mail) => [nome, tel, mail].some(Boolean) ? `${esc(nome || "")}${tel ? ` <a href="tel:${esc(String(tel).split(" · ")[0])}">${esc(tel)}</a>` : ""}${mail ? ` <a href="mailto:${esc(String(mail).split(" · ")[0])}">${esc(mail)}</a>` : ""}` : "";
+const linkEsterno = (url, txt) => url ? `<a href="${esc(url)}" target="_blank" rel="noopener">${esc(txt || url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/.*$/, ""))}</a>` : "";
+const isDemo = r => /^DEMO/.test(r.note || "");
+
+/* location */
+const locCitta = l => l.citta || "";
+const locCap = l => l.capienza_standing || l.capienza_seduti ? `${num0(l.capienza_standing || "—")} in piedi · ${num0(l.capienza_seduti || "—")} seduti` : "";
+function vLocation() {
+  const f = S.loc;
+  const q = f.q.trim().toLowerCase();
+  const tutte = D.LOCATION.filter(l => l.stato !== "inattiva");
+  const citta = [...new Set(tutte.map(locCitta).filter(Boolean))].sort();
+  const tipi = [...new Set(tutte.flatMap(l => lista(l.tipologia)))].sort();
+  const rows = tutte.filter(l => (!q || [l.nome, l.alias, l.citta, l.tipologia, l.stile, l.eventi_adatti, l.indirizzo].join(" ").toLowerCase().includes(q))
+    && (!f.citta || locCitta(l) === f.citta) && (!f.tipo || lista(l.tipologia).includes(f.tipo)) && (!f.pax || (l.capienza_standing || 0) >= +f.pax || (l.capienza_seduti || 0) >= +f.pax)
+    && (!f.esterno || (l.spazio_esterno && l.spazio_esterno !== "no")))
+    .sort((a, b) => a.nome.localeCompare(b.nome));
+  return `
+  <div class="view-head"><div><h1>Location <span class="muted">${rows.length}</span></h1></div>
+    <div class="filters" role="group" aria-label="Filtri">
+      <input type="search" class="search" data-locf="q" value="${esc(f.q)}" placeholder="Cerca nome, città, stile…" aria-label="Cerca">
+      <select data-locf="citta" aria-label="Città"><option value="">Tutte le città</option>${citta.map(c => `<option ${f.citta === c ? "selected" : ""}>${esc(c)}</option>`).join("")}</select>
+      <select data-locf="tipo" aria-label="Tipologia"><option value="">Ogni tipologia</option>${tipi.map(t => `<option value="${esc(t)}" ${f.tipo === t ? "selected" : ""}>${esc(cap(t))}</option>`).join("")}</select>
+      <input type="number" class="pax" data-locf="pax" value="${esc(f.pax)}" min="0" step="10" placeholder="Pax" aria-label="Persone minime">
+      <button class="chip" data-locf="esterno" aria-pressed="${f.esterno}">Spazio esterno</button>
+    </div></div>
+  ${rows.length ? `<div class="cards">${rows.map(l => `
+    <button class="card" data-locopen="${l.location_id}">
+      <div class="card-h"><b>${esc(l.nome)}</b>${isDemo(l) ? pill("DEMO", "") : ""}${l.residente === "sì" ? pill("residente", "p-acc") : ""}</div>
+      <div class="card-sub">${esc([cap(lista(l.tipologia)[0] || ""), l.citta, l.posizione].filter(Boolean).join(" · "))}</div>
+      <div class="card-tags">${lista(l.stile).slice(0, 3).map(s => `<span class="tag">${esc(s)}</span>`).join("")}${l.spazio_esterno && l.spazio_esterno !== "no" ? `<span class="tag">${esc(l.spazio_esterno)}</span>` : ""}</div>
+      <div class="card-nums">${l.mq ? `<span><b>${num0(l.mq)}</b> mq</span>` : ""}${l.capienza_standing ? `<span><b>${num0(l.capienza_standing)}</b> in piedi</span>` : ""}${l.capienza_seduti ? `<span><b>${num0(l.capienza_seduti)}</b> seduti</span>` : ""}${l.costo_giorno_evento ? `<span><b>${eur(l.costo_giorno_evento)}</b> /giorno</span>` : ""}</div>
+    </button>`).join("")}</div>` : `<div class="empty">Nessuna location con questi filtri.</div>`}`;
+}
+function vLocationScheda() {
+  const l = LOC[S.locId]; if (!l) { S.view = "location"; return vLocation(); }
+  const sale = D.SALE.filter(s => s.location_id === l.location_id);
+  const partner = l.tramite_partner_org_id && ORG[l.tramite_partner_org_id], agenzia = l.agenzia_org_id && ORG[l.agenzia_org_id];
+  const commesse = D.COMMESSE.filter(c => c.location_id === l.location_id);
+  const sino = v => v === "sì" ? "sì" : v === "no" ? "no" : "";
+  const ind = [l.indirizzo, [l.cap, l.citta].filter(Boolean).join(" "), l.provincia ? `(${l.provincia})` : ""].filter(Boolean).join(", ");
+  return `
+  <button class="back" data-nav="location">‹ Location</button>
+  <div class="sheet-head">
+    <div class="title-row"><div class="hier">
+      <h1>${esc(l.nome)}${l.alias ? ` <span class="hcode">${esc(l.alias)}</span>` : ""}</h1>
+      <div class="hloc">${esc([lista(l.tipologia).map(cap).join(", "), lista(l.stile).join(", ")].filter(Boolean).join(" · "))}</div>
+      <div class="hpm">${esc(ind)}${l.posizione ? ` <span>· ${esc(l.posizione)}</span>` : ""}${l.metro_15min === "sì" ? " <span>· metro a meno di 15 min</span>" : ""}</div></div>
+      <div class="actions" style="margin:0">${l.sito ? `<a class="btn ghost" href="${esc(l.sito)}" target="_blank" rel="noopener">Sito</a>` : ""}${l.drive_url ? `<a class="btn ghost" href="${esc(l.drive_url)}" target="_blank" rel="noopener">Drive</a>` : ""}</div></div>
+  </div>
+  <div class="grid2">
+    <div class="col">
+      <div class="facts">
+        ${fattoDi("Intera location", [l.mq ? num0(l.mq) + " mq" : "", locCap(l)].filter(Boolean).join(" · "))}
+        ${fattoDi("Costo evento", l.costo_giorno_evento ? eur(l.costo_giorno_evento) + " /giorno" : "")}
+        ${fattoDi("Allestimento", l.costo_setup ? eur(l.costo_setup) + " /giorno" : "")}
+        ${fattoDi("Sale", l.numero_sale)}
+        ${fattoDi("Spazio esterno", l.spazio_esterno && l.spazio_esterno !== "no" ? esc(l.spazio_esterno) : "")}
+        ${fattoDi("Eventi adatti", lista(l.eventi_adatti).join(", "))}
+      </div>
+      ${sale.length ? `<section class="panel"><h2>Sale</h2><table><thead><tr><th>Sala</th><th class="num">mq</th><th class="num">In piedi</th><th class="num">Seduti</th><th class="num">Evento</th><th class="num">Setup</th></tr></thead>
+        <tbody>${sale.map(s => `<tr><td>${esc(s.nome)}${s.principale === "sì" ? ` ${pill("principale", "p-acc")}` : ""}</td><td class="num">${num0(s.mq)}</td><td class="num">${num0(s.capienza_standing)}</td><td class="num">${num0(s.capienza_seduti)}</td><td class="num">${s.prezzo_giorno ? eur(s.prezzo_giorno) : ""}</td><td class="num">${s.prezzo_setup ? eur(s.prezzo_setup) : ""}</td></tr>`).join("")}</tbody></table></section>` : ""}
+      <section class="panel"><h2>Tecnica e servizi</h2><div class="facts bare">
+        ${fattoDi("Attrezzature residenti", l.attrezzature_residenti && l.attrezzature_residenti !== "no" ? esc(l.attrezzature_residenti) : l.attrezzature_residenti === "no" ? "nessuna" : "")}
+        ${fattoDi("Potenza elettrica", l.potenza_elettrica_kw ? l.potenza_elettrica_kw + " kW" : "")}
+        ${fattoDi("Wi-Fi", esc(l.wifi))}
+        ${fattoDi("Climatizzazione", sino(l.climatizzazione))}
+        ${fattoDi("Cucina", esc(l.cucina))}
+        ${fattoDi("Posti auto interni", l.posti_auto_interni)}
+        ${fattoDi("Fine musica", esc(l.orario_fine_musica))}
+        ${fattoDi("Accessibilità", sino(l.accessibilita_disabili))}
+        ${fattoDi("Carico e scarico", esc(l.carico_scarico))}
+        ${fattoDi("Certificazioni", [l.certificazioni_strutturali, l.certificazioni_gestionali].filter(Boolean).join(", "))}
+      </div></section>
+      ${l.note ? `<section class="panel"><h2>Note</h2><p class="small">${esc(l.note)}</p></section>` : ""}
+    </div>
+    <div class="col">
+      <section class="panel"><h2>Contatti</h2><div class="facts bare">
+        ${fattoDi("Location", contatto(l.referente_nome, l.referente_telefono, l.referente_email))}
+        ${fattoDi("Service", [l.service_residente ? `<b>${esc(l.service_residente)}</b>` : "", contatto(l.service_referente, l.service_telefono, l.service_email)].filter(Boolean).join("<br>"))}
+        ${fattoDi("Catering", [l.catering_residente ? `<b>${esc(l.catering_residente)}</b>` : "", contatto(l.catering_referente, l.catering_telefono, l.catering_email)].filter(Boolean).join("<br>"))}
+        ${fattoDi("Partner", partner ? `<button class="linkbtn" data-fornopen="${partner.org_id}">${esc(partner.nome_breve)}</button>` : "")}
+        ${fattoDi("Agenzia", agenzia ? esc(agenzia.nome_breve) : "")}
+        ${fattoDi("Gestore", l.gestore_org_id && ORG[l.gestore_org_id] ? esc(ORG[l.gestore_org_id].nome_breve) : "")}
+      </div></section>
+      ${commesse.length ? `<section class="panel"><h2>Commesse qui <span class="muted">${commesse.length}</span></h2><div class="plist">${commesse.map(c => `<button class="prow" data-open="${c.commessa_id}"><span class="mono small">${esc(codice(c))}</span><span><span class="t">${esc(c.titolo_evento)}</span><br><span class="sub">${fd(c.data_inizio)}</span></span></button>`).join("")}</div></section>` : ""}
+    </div>
+  </div>`;
+}
+
+/* fornitori */
+const FORN = Object.fromEntries((D.FORNITORI || []).map(f => [f.org_id, f]));
+const fornOrgs = () => D.ORGANIZZAZIONI.filter(o => o.e_fornitore === "sì" || o.e_partner === "sì" || FORN[o.org_id]);
+const fornCat = o => { const f = FORN[o.org_id]; return f ? lista(f.categorie) : o.e_partner === "sì" ? ["partner"] : []; };
+function vFornitori() {
+  const f = S.forn, q = f.q.trim().toLowerCase();
+  const tutti = fornOrgs();
+  const cats = [...new Set(tutti.flatMap(fornCat))].sort();
+  const rows = tutti.filter(o => (!q || [o.nome_breve, o.ragione_sociale, o.citta, FORN[o.org_id]?.sottocategorie, FORN[o.org_id]?.categorie, o.tipo_partner].join(" ").toLowerCase().includes(q))
+    && (!f.cat || fornCat(o).includes(f.cat))).sort((a, b) => a.nome_breve.localeCompare(b.nome_breve));
+  return `
+  <div class="view-head"><div><h1>Fornitori <span class="muted">${rows.length}</span></h1></div>
+    <div class="filters" role="group" aria-label="Filtri">
+      <input type="search" class="search" data-fornf="q" value="${esc(f.q)}" placeholder="Cerca nome, città, specialità…" aria-label="Cerca">
+      ${cats.map(c => `<button class="chip" data-fornf="cat" data-v="${esc(c)}" aria-pressed="${f.cat === c}">${esc(cap(c))}</button>`).join("")}
+    </div></div>
+  ${rows.length ? `<div class="cards">${rows.map(o => { const fr = FORN[o.org_id] || {}; const ct = D.CONTATTI.find(c => c.org_id === o.org_id && c.principale === "sì");
+    return `<button class="card" data-fornopen="${o.org_id}">
+      <div class="card-h"><b>${esc(o.nome_breve)}</b>${isDemo(o) ? pill("DEMO", "") : ""}${fr.sconto_ricevuto ? pill(`sconto ${fr.sconto_ricevuto}%`, "p-ok") : ""}</div>
+      <div class="card-sub">${esc([fornCat(o).map(cap).join(", "), fr.tipo_fornitura, o.citta].filter(Boolean).join(" · "))}</div>
+      <div class="card-tags">${lista(fr.sottocategorie).slice(0, 4).map(s => `<span class="tag">${esc(s)}</span>`).join("")}${o.e_partner === "sì" ? `<span class="tag">${esc(o.tipo_partner || "partner")}</span>` : ""}</div>
+      <div class="card-nums">${ct ? `<span>${esc(ct.nome + " " + ct.cognome)}</span>` : o.telefono ? `<span>${esc(o.telefono)}</span>` : ""}</div>
+    </button>`; }).join("")}</div>` : `<div class="empty">Nessun fornitore con questi filtri.</div>`}`;
+}
+function vFornitoreScheda() {
+  const o = ORG[S.fornId]; if (!o) { S.view = "fornitori"; return vFornitori(); }
+  const fr = FORN[o.org_id] || {};
+  const contatti = D.CONTATTI.filter(c => c.org_id === o.org_id);
+  const accordi = D.ACCORDI_PARTNER.filter(a => a.partner_org_id === o.org_id);
+  const ordini = (D.ORDINI || []).filter(x => x.fornitore_org_id === o.org_id);
+  const locs = D.LOCATION.filter(l => l.tramite_partner_org_id === o.org_id || l.gestore_org_id === o.org_id);
+  const ind = [o.indirizzo, [o.cap, o.citta].filter(Boolean).join(" "), o.provincia ? `(${o.provincia})` : ""].filter(Boolean).join(", ");
+  return `
+  <button class="back" data-nav="fornitori">‹ Fornitori</button>
+  <div class="sheet-head">
+    <div class="title-row"><div class="hier">
+      <h1>${esc(o.nome_breve)}${o.ragione_sociale && o.ragione_sociale !== o.nome_breve ? ` <span class="hcode">${esc(o.ragione_sociale)}</span>` : ""}</h1>
+      <div class="hloc">${esc([fornCat(o).map(cap).join(", "), fr.tipo_fornitura, o.tipo_partner].filter(Boolean).join(" · "))}</div>
+      <div class="hpm">${esc(ind)}</div></div>
+      <div class="actions" style="margin:0">${o.sito ? `<a class="btn ghost" href="${esc(o.sito)}" target="_blank" rel="noopener">Sito</a>` : ""}</div></div>
+  </div>
+  <div class="grid2">
+    <div class="col">
+      <div class="facts">
+        ${fattoDi("Specialità", lista(fr.sottocategorie).join(", "))}
+        ${fattoDi("Sconto a noi", fr.sconto_ricevuto ? fr.sconto_ricevuto + "%" : "")}
+        ${fattoDi("Orari", esc(o.orari))}
+        ${fattoDi("Telefono", o.telefono ? `<a href="tel:${esc(o.telefono.split(" · ")[0])}">${esc(o.telefono)}</a>` : "")}
+        ${fattoDi("Email", o.email ? `<a href="mailto:${esc(o.email.split(" · ")[0])}">${esc(o.email)}</a>` : "")}
+        ${fattoDi("Partita IVA", esc(o.partita_iva))}
+        ${fattoDi("Valutazione", fr.valutazione ? "★".repeat(fr.valutazione) : "")}
+        ${fattoDi("Documenti", fr.durc_scadenza ? `DURC fino al ${fd(fr.durc_scadenza)}` : "")}
+      </div>
+      ${contatti.length ? `<section class="panel"><h2>Contatti</h2><div class="team">${contatti.map(c => `<div class="row-c"><b>${esc((c.nome + " " + c.cognome).trim())}</b>${c.ruolo ? ` <span class="muted small">${esc(c.ruolo)}</span>` : ""}<span class="small">${c.telefono ? `<a href="tel:${esc(c.telefono)}">${esc(c.telefono)}</a>` : ""}${c.email ? ` <a href="mailto:${esc(c.email)}">${esc(c.email)}</a>` : ""}</span></div>`).join("")}</div></section>` : ""}
+      ${accordi.length ? `<section class="panel"><h2>Accordi</h2><table><tbody>${accordi.map(a => `<tr><td>${esc(a.direzione === "a noi" ? "Sconto a noi" : "Sconto al partner")}<div class="small muted">${esc(a.ambito)}${a.esclusioni ? " · escluso " + esc(a.esclusioni) : ""}</div></td><td class="num">${a.percentuale != null ? a.percentuale + "%" : esc(a.note || "da definire")}</td></tr>`).join("")}</tbody></table></section>` : ""}
+      ${fr.note || (o.note && !isDemo(o)) ? `<section class="panel"><h2>Note</h2><p class="small">${esc(fr.note || o.note)}</p></section>` : ""}
+    </div>
+    <div class="col">
+      ${locs.length ? `<section class="panel"><h2>Location <span class="muted">${locs.length}</span></h2><div class="plist">${locs.map(l => `<button class="prow" data-locopen="${l.location_id}"><span></span><span><span class="t">${esc(l.nome)}</span><br><span class="sub">${esc(l.citta)}</span></span></button>`).join("")}</div></section>` : ""}
+      ${ordini.length ? `<section class="panel"><h2>Ordini <span class="muted">${ordini.length}</span></h2><div class="plist">${ordini.map(x => `<button class="prow" data-open="${x.commessa_id}"><span class="mono small">${esc(COM[x.commessa_id] ? codice(COM[x.commessa_id]) : "")}</span><span><span class="t">${esc(x.descrizione)}</span><br><span class="sub">${esc(x.stato)}${x.importo_previsto ? " · " + eur(x.importo_previsto) : ""}</span></span></button>`).join("")}</div></section>` : ""}
+    </div>
+  </div>`;
+}
+
 function render() {
   document.querySelectorAll("[data-nav]").forEach(b => b.closest("nav") && b.setAttribute("aria-current", (S.view === b.dataset.nav || ((S.view === "scheda" || S.view === "nuova") && b.dataset.nav === "progetti")) ? "page" : "false"));
   const el = document.getElementById("main");
@@ -958,7 +1118,7 @@ function render() {
       <div><p class="lbl">${esc(art.categoria)}${art.sottocategoria ? " · " + esc(art.sottocategoria) : ""}</p><h2 id="mtitle" style="font-size:1.1rem;text-transform:none;letter-spacing:0;color:var(--fg);margin:2px 0 4px">${esc(prod(art))}</h2><p class="muted">${esc(art.nome)}</p>
       <dl class="spec">${[["Codice", art.codice], ["Peso", art.peso_kg ? art.peso_kg + " kg" : ""], ["Potenza", art.potenza_w ? art.potenza_w + " W" : ""], ["Proprietà", art.proprietario], ["Noleggio", art.prezzo_noleggio_giorno ? eur(art.prezzo_noleggio_giorno) + " / giorno" : ""], ["Tracciato a pezzo", art.tracciato_a_pezzo], ["Giacenze", D.GIACENZE.filter(g => g.articolo_id === art.articolo_id).map(g => `${g.quantita} ${shortMag(MAG[g.magazzino_id].nome)}`).join(" · ")]].filter(x => x[1]).map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
       <p class="small muted" style="margin-top:10px">Scheda tecnica e foto arriveranno dal database.</p></div></div></div>`;
-  el.innerHTML = (S.view === "nuova" ? vNuova() : S.view === "cal" ? vCal() :  S.view === "scheda" ? vScheda() : S.view === "magazzino" ? vMagazzino() : S.view === "todo" ? vTodo() : vProgetti());
+  el.innerHTML = (S.view === "nuova" ? vNuova() : S.view === "cal" ? vCal() :  S.view === "scheda" ? vScheda() : S.view === "magazzino" ? vMagazzino() : S.view === "location" ? vLocation() : S.view === "locscheda" ? vLocationScheda() : S.view === "fornitori" ? vFornitori() : S.view === "fornscheda" ? vFornitoreScheda() : S.view === "todo" ? vTodo() : vProgetti());
 }
 const sel = document.getElementById("user");
 sel.innerHTML = USERS.map(p => `<option value="${p}">${esc(nome(p))} · ${esc(ruoli(p).map(r => RUOLO_NOME[r]).join(", "))}</option>`).join("");
@@ -972,9 +1132,14 @@ const addRow = (r, label) => { const pv = curPV(); const ex = pv.righe.find(x =>
 const evDays = () => { const c = COM[S.comm]; return giorni(c.data_inizio, c.data_fine); };
 
 document.addEventListener("click", e => {
-  const t = e.target.closest("[data-nav],[data-open],[data-filtro],[data-tmine],[data-tstato],[data-conferma],[data-confall],[data-mtab],[data-pvcreate],[data-pvopen],[data-src],[data-addinv],[data-addloc],[data-addlis],[data-addgra],[data-rm],[data-ropz],[data-ralt],[data-pvact],[data-calnav],[data-calgo],[data-stab],[data-reqtoggle],[data-confsel],[data-magev],[data-art],[data-artclose],[data-dir],[data-file],[data-sez],[data-genpiano],[data-slconf],[data-slopz],[data-sloff],[data-sladd],[data-fbrm],[data-fbprev],[data-ctab],[data-wk],[data-wkgo],[data-mese],[data-mesego],[data-calpp],[data-ncstep],[data-ncsk],[data-ncdoc],[data-ncrm]");
+  const t = e.target.closest("[data-locopen],[data-fornopen],[data-locf],[data-fornf],[data-nav],[data-open],[data-filtro],[data-tmine],[data-tstato],[data-conferma],[data-confall],[data-mtab],[data-pvcreate],[data-pvopen],[data-src],[data-addinv],[data-addloc],[data-addlis],[data-addgra],[data-rm],[data-ropz],[data-ralt],[data-pvact],[data-calnav],[data-calgo],[data-stab],[data-reqtoggle],[data-confsel],[data-magev],[data-art],[data-artclose],[data-dir],[data-file],[data-sez],[data-genpiano],[data-slconf],[data-slopz],[data-sloff],[data-sladd],[data-fbrm],[data-fbprev],[data-ctab],[data-wk],[data-wkgo],[data-mese],[data-mesego],[data-calpp],[data-ncstep],[data-ncsk],[data-ncdoc],[data-ncrm]");
   if (!t) return;
   const d = t.dataset;
+  if (d.locopen) { S.locId = d.locopen; S.view = "locscheda"; render(); window.scrollTo(0, 0); return; }
+  if (d.fornopen) { S.fornId = d.fornopen; S.view = "fornscheda"; render(); window.scrollTo(0, 0); return; }
+  if (d.locf === "esterno") { S.loc.esterno = !S.loc.esterno; render(); return; }
+  if (d.fornf === "cat") { S.forn.cat = S.forn.cat === d.v ? "" : d.v; render(); return; }
+  if (t.matches("input,select")) return;
   if (d.nav) { if (d.nav === "nuova") S.nc = null; S.view = d.nav; render(); window.scrollTo(0, 0); }
   else if (d.ncstep) { S.nc.step = +d.ncstep; render(); window.scrollTo(0, 0); }
   else if (d.ncsk) { S.nc.schede[d.ncsk] = d.v === "1"; render(); }
@@ -1057,6 +1222,8 @@ document.addEventListener("submit", e => {
 });
 document.addEventListener("change", e => {
   const t = e.target, d = t.dataset;
+  if (d.locf && d.locf !== "esterno") { S.loc[d.locf] = t.value; render(); return; }
+  if (d.fornf === "q") { S.forn.q = t.value; render(); return; }
   if (d.todo) { const x = D.TODO_CLICKUP.find(y => y.clickup_task_id === d.todo); x.stato = t.checked ? "fatto" : "da fare"; render(); toast(t.checked ? "Segnato come fatto" : "Riaperto"); }
   else if (d.m && d.m !== "q") { S.mag[d.m] = t.value; render(); }
   else if (d.pv) { const pv = curPV(); pv[d.pv] = d.pv === "sconto" ? Math.max(0, Math.min(50, +t.value || 0)) : t.value;
@@ -1087,6 +1254,7 @@ document.addEventListener("change", e => {
   else if (d.cal) { S.mag[d.cal] = d.cal === "solo" ? t.checked : t.value; render(); }
 });
 document.addEventListener("input", e => {
+  if (e.target.dataset.locf === "q" || e.target.dataset.fornf === "q") { const k = e.target.dataset.locf ? "loc" : "forn"; S[k].q = e.target.value; const pos = e.target.selectionStart; render(); const el = document.querySelector(`[data-${k}f="q"]`); if (el) { el.focus(); el.setSelectionRange(pos, pos); } return; }
   const t = e.target;
   if (t.dataset.m === "q") { S.mag.q = t.value; const pos = t.selectionStart; render(); const n = document.getElementById("m-q"); n.focus(); n.setSelectionRange(pos, pos); }
 });
