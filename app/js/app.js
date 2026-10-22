@@ -763,6 +763,8 @@ function vNuova() {
       <div class="row">${F("cliente", "Cliente", sel("cliente", [...ORGS(o => o.e_cliente === "sì"), ["nuovo", "+ nuovo cliente"]], "Scegli…"))}
         ${n.cliente === "nuovo" ? F("cliente_nuovo", "Nome nuovo cliente", inp("cliente_nuovo")) : F("agenzia", "Agenzia (terza parte)", sel("agenzia", ORGS(o => o.e_agenzia === "sì"), "Nessuna, cliente diretto"))}</div>
       ${n.cliente === "nuovo" ? F("agenzia", "Agenzia (terza parte)", sel("agenzia", ORGS(o => o.e_agenzia === "sì"), "Nessuna, cliente diretto")) : ""}
+      <div class="row">${F("lead", "Lead (chi porta il cliente)", sel("lead", ORGS(o => o.e_partner === "sì"), "Nessuno"))}
+        ${n.lead ? `<div class="row" style="grid-template-columns:1fr 80px">${F("lead_tipo", "Riconoscimento", sel("lead_tipo", [["rebate", "rebate"], ["sconto", "sconto in fattura"]]))}${F("lead_pct", "%", inp("lead_pct", "number", 'min="0" max="30" step="0.5"'))}</div>` : "<div></div>"}</div>
       <div class="row">${F("ref_nome", "Referente del cliente", inp("ref_nome", "text", 'placeholder="Nome e cognome"'))}${F("ref_email", "Email", inp("ref_email", "email"))}</div>
       <div class="row">${F("ref_cell", "Cellulare", inp("ref_cell", "tel"))}<div></div></div>
       <div class="row">${F("location", "Location", sel("location", [...D.LOCATION.map(l => [l.location_id, `${l.nome} · ${l.citta}`]), ["nuova", "+ location non in anagrafica"]], "Da definire"))}
@@ -771,11 +773,9 @@ function vNuova() {
       <div class="row">${F("dal", "Evento dal", `<div class="dt">${inp("dal", "date", "required")}<input type="time" id="nc-ora_inizio" value="${n.ora_inizio}" data-nc="ora_inizio" aria-label="Ora di inizio" required></div>`)}
         ${F("al", "al", `<div class="dt">${inp("al", "date", `required min="${n.dal}"`)}<input type="time" id="nc-ora_fine" value="${n.ora_fine}" data-nc="ora_fine" aria-label="Ora di fine" required></div>`)}</div>
     </div></section>
-    <section class="panel"><h2>Persone e partner</h2><div class="form">
+    <section class="panel"><h2>Persone</h2><div class="form">
       <div class="row">${F("pm", "PM", sel("pm", pers(["PM"])))}${F("backup", "PM backup", sel("backup", pers(["PM"]).filter(p => p[0] !== n.pm), "Nessuno"))}</div>
-      <div class="row">${F("sales", "Sales", sel("sales", pers(["COM", "DIR"]), "Nessuno"))}${F("catering", "Catering", sel("catering", ORGS(o => o.e_fornitore === "sì" && D.FORNITORI.some(f => f.org_id === o.org_id && /catering/.test(f.categorie)) || o.org_id === "ORG-013"), "Da definire"))}</div>
-      <div class="row">${F("lead", "Lead (chi porta il cliente)", sel("lead", ORGS(o => o.e_partner === "sì"), "Nessuno"))}
-        ${n.lead ? `<div class="row" style="grid-template-columns:1fr 80px">${F("lead_tipo", "Riconoscimento", sel("lead_tipo", [["rebate", "rebate"], ["sconto", "sconto in fattura"]]))}${F("lead_pct", "%", inp("lead_pct", "number", 'min="0" max="30" step="0.5"'))}</div>` : "<div></div>"}</div>
+      <div class="row">${F("sales", "Sales", sel("sales", pers(["COM", "DIR"]), "Nessuno"))}<div></div></div>
     </div></section></div>`;
   else if (n.step === 2) body = `<section class="panel"><h2>Schede del progetto</h2>
     <div class="sk-list">
