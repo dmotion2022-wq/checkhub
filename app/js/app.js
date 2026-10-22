@@ -7,10 +7,11 @@ const PER = idx("PERSONE", "persona_id"), ORG = idx("ORGANIZZAZIONI", "org_id"),
       SEGN = idx("SEGNALAZIONI", "segnalazione_id"), FILES = idx("FILE", "file_id"), RIS = Object.fromEntries(D.RIASSUNTI.map(r => [r.oggetto_id, r]));
 PER.P01 && Object.assign(PER.P01, { nome: "Utenza", cognome: "master" });
 const USERS = ["P04", "P09", "P11", "P02", "P01"];
-const S = { user: "P01", view: "progetti", comm: null, stab: "overview", dir: "", fileOpen: null, art: null, pvHide: new Set(), pvTool: null, pvRow: null, filtro: "attive", mag: { tab: null, open: null, ev: null, sel: new Set(), calMag: "MAG-C", calDa: "2026-11-09", solo: true, dal: "2026-11-11", al: "2026-11-13", mag: "tutti", cat: "tutte", q: "" }, todo: { mine: false, stato: "aperti" }, cal: { tab: "generale", p: null, da: "2026-11-09", mese: "2026-11" }, nc: null, src: "inv", check: null, loc: { q: "", citta: "", tipo: "", pax: "", esterno: false, vista: "blocchi" }, locId: null, locNew: null, forn: { q: "", cat: "", vista: "blocchi" }, fornId: null, fornNew: null };
+const S = { user: "P01", view: "home", comm: null, stab: "overview", dir: "", fileOpen: null, art: null, pvHide: new Set(), pvTool: null, pvRow: null, filtro: "attive", mag: { tab: null, open: null, ev: null, sel: new Set(), calMag: "MAG-C", calDa: "2026-11-09", solo: true, dal: "2026-11-11", al: "2026-11-13", mag: "tutti", cat: "tutte", q: "" }, todo: { mine: false, stato: "aperti" }, cal: { tab: "generale", p: null, da: "2026-11-09", mese: "2026-11" }, nc: null, src: "inv", check: null, pal: null, loc: { q: "", citta: "", tipo: "", pax: "", esterno: false, vista: "blocchi" }, locId: null, locNew: null, forn: { q: "", cat: "", vista: "blocchi" }, fornId: null, fornNew: null };
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const MESI = ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"];
+const fdr = (a, b) => { if (!b || b === a) return fd(a); const [ya, ma, ga] = a.slice(0, 10).split("-"), [yb, mb] = b.slice(0, 10).split("-"); return ya === yb && ma === mb ? `${+ga}–${fd(b)}` : `${fd(a)} – ${fd(b)}`; };
 const fd = d => { if (!d) return ""; const [y, m, g] = d.slice(0, 10).split("-"); return `${+g} ${MESI[+m - 1]}${y !== "2026" ? " " + y : ""}`; };
 const fdt = d => d ? `${fd(d)} ${d.slice(11, 16)}` : "";
 const eur = n => n == null ? "—" : new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
@@ -1184,6 +1185,83 @@ function vFornitoreScheda() {
   </div>`;
 }
 
+
+/* ── Home "Oggi" ── */
+function vHome() {
+  const oggi = new Date(TODAY + "T00:00"), tra7 = addDays(TODAY, 7);
+  const mie = commesseVisibili().filter(c => !["chiusa", "persa", "annullata"].includes(c.stato) && (ruoli(S.user).some(r => ["DIR", "SYS", "AMM"].includes(r)) || [c.pm_persona_id, c.backup_persona_id, c.sales_persona_id].includes(S.user) || D.TEAM.some(t => t.commessa_id === c.commessa_id && t.persona_id === S.user)))
+    .sort((a, b) => a.data_inizio.localeCompare(b.data_inizio));
+  let sett = D.FASI.filter(f => f.dal.slice(0, 10) >= TODAY && f.dal.slice(0, 10) < tra7 && COM[f.commessa]).sort((a, b) => a.dal.localeCompare(b.dal));
+  const prossime = !sett.length; if (prossime) sett = D.FASI.filter(f => f.dal.slice(0, 10) >= TODAY && COM[f.commessa]).sort((a, b) => a.dal.localeCompare(b.dal)).slice(0, 6);
+  const perGiorno = {}; sett.forEach(f => (perGiorno[f.dal.slice(0, 10)] ||= []).push(f));
+  const att = mie.flatMap(c => avvisi(c).map(a => ({ ...a, cid: c.commessa_id }))).sort((a, b) => (a.k === "crit" ? 0 : 1) - (b.k === "crit" ? 0 : 1)).slice(0, 8);
+  const rich = D.PRENOTAZIONI.filter(p => p.stato === "richiesta"); const richG = {}; rich.forEach(p => (richG[p.commessa_id] ||= []).push(p));
+  const todo = D.TODO_CLICKUP.filter(t => t.stato !== "fatto" && (t.assegnatario_persona_id === S.user || ruoli(S.user).includes("DIR") || ruoli(S.user).includes("SYS"))).sort((a, b) => (a.scadenza || "9").localeCompare(b.scadenza || "9")).slice(0, 6);
+  const giorno = d => { const x = new Date(d + "T00:00"); return `${GGL[(x.getDay() + 6) % 7]} ${x.getDate()} ${MESI[x.getMonth()]}`; };
+  return `
+  <div class="view-head"><div><h1>Oggi <span class="muted">${giorno(TODAY)}</span></h1></div>
+    <div class="filters"><span class="small muted">${mie.length} commesse in corso · ${att.filter(a => a.k === "crit").length} critiche · ${rich.length} richieste magazzino</span></div></div>
+  <div class="grid2">
+    <div class="col">
+      <section class="panel"><h2>${prossime ? "Prossime fasi" : "Questa settimana"} <span class="muted">${sett.length}</span></h2>
+        ${sett.length ? Object.entries(perGiorno).map(([d, fs]) => `<div class="day-h">${giorno(d)}${d === TODAY ? " · oggi" : ""}</div><div class="plist flat">${fs.map(f => { const c = COM[f.commessa]; return `<button class="prow prow-h" data-open="${c.commessa_id}"><span class="mono sub">${hh(f.dal)}–${hh(f.al)}</span><span><span class="t">${esc(faseNome(f))}</span><br><span class="sub">${esc(codice(c))} · ${esc(c.titolo_evento)}</span></span><span class="sub">${esc(f.luogo || "")}</span></button>`; }).join("")}</div>`).join("") : `<div class="empty">Nessuna fase nei prossimi 7 giorni.<button class="linkbtn" data-nav="cal">Apri il calendario</button></div>`}
+      </section>
+      <section class="panel"><h2>Le mie commesse <span class="muted">${mie.length}</span></h2>
+        ${mie.length ? `<div class="plist flat">${mie.map(c => { const pf = primaFase(c.commessa_id), sc = D.PIANO[c.commessa_id] ? scoperti(c.commessa_id).n : 0; return `<button class="prow prow-h az-${c.azienda_capofila === "Nakama" ? "nk" : "ch"}" data-open="${c.commessa_id}"><span class="code">${esc(codice(c))}</span><span><span class="t">${esc(c.titolo_evento)}</span><br><span class="sub">${esc(locTxt(c, false))} · ${fdr(c.data_inizio, c.data_fine)}</span></span><span class="sub">${sc ? pill(`${sc} scoperti`, "p-warn") : pf ? "" : pill("senza piano", "")}</span><span>${pill(c.stato, STATO_CLS[c.stato])}</span></button>`; }).join("")}</div>` : `<div class="empty">Nessuna commessa assegnata a te.<button class="linkbtn" data-nav="progetti">Vedi tutte</button></div>`}
+      </section>
+    </div>
+    <div class="col">
+      <section class="panel"><h2>Attenzione <span class="muted">${att.length}</span></h2>
+        ${att.length ? `<div class="alerts">${att.map(a => `<button class="alert ${a.k} alert-b" data-open="${a.cid}"><span class="dot"></span><div><b>${esc(a.t)}</b> <span class="muted">${esc(codice(COM[a.cid]))}</span><br>${esc(a.s)}</div></button>`).join("")}</div>` : `<div class="empty">Niente da segnalare.</div>`}
+      </section>
+      ${rich.length ? `<section class="panel"><h2>Magazzino da confermare <span class="muted">${rich.length}</span></h2><div class="plist flat">${Object.entries(richG).map(([cid, ps]) => { const c = COM[cid]; return `<button class="prow prow-h" data-nav="magazzino"><span class="code">${esc(codice(c))}</span><span><span class="t">${esc(c.titolo_evento)}</span><br><span class="sub">${ps.length} righe · ${esc(MAG[ps[0].magazzino_id]?.nome || "")}</span></span></button>`; }).join("")}</div></section>` : ""}
+      ${todo.length ? `<section class="panel"><h2>To-Do <span class="muted">${todo.length}</span></h2><div class="todo-mini">${todo.map(t => `<label class="todo-r"><input type="checkbox" data-todo="${t.clickup_task_id}"><span>${esc(t.titolo)}<br><span class="sub muted">${t.commessa_id && COM[t.commessa_id] ? esc(codice(COM[t.commessa_id])) + " · " : ""}${t.scadenza ? (t.scadenza < TODAY ? `<span class="crit-t">scaduto ${fd(t.scadenza)}</span>` : "entro " + fd(t.scadenza)) : ""}</span></span></label>`).join("")}</div><div class="actions"><button class="linkbtn" data-nav="todo">Tutti i to-do</button></div></section>` : ""}
+    </div>
+  </div>`;
+}
+
+/* ── palette comandi (⌘K) e scorciatoie ── */
+function paletteItems(q) {
+  q = q.trim().toLowerCase(); const out = [];
+  const add = (tipo, t, s, go) => out.push({ tipo, t, s, go });
+  if (!q) { [["progetti", "Progetti"], ["cal", "Calendario"], ["magazzino", "Magazzino"], ["location", "Location"], ["fornitori", "Fornitori"], ["todo", "To-Do"], ["nuova", "Nuova commessa"]].forEach(([v, t]) => add("vai a", t, "", () => { if (v === "nuova") S.nc = null; S.view = v; })); return out; }
+  const m = s => String(s || "").toLowerCase().includes(q);
+  D.COMMESSE.filter(c => m(codice(c)) || m(c.titolo_evento) || m(org(c.cliente_org_id))).slice(0, 6).forEach(c => add("commessa", `${codice(c)} · ${c.titolo_evento}`, `${org(c.cliente_org_id)} · ${fdr(c.data_inizio, c.data_fine)}`, () => { S.comm = c.commessa_id; S.view = "scheda"; S.stab = "overview"; }));
+  D.LOCATION.filter(l => m(l.nome) || m(l.alias) || m(l.citta)).slice(0, 5).forEach(l => add("location", l.nome, [l.citta, lista(l.tipologia)[0]].filter(Boolean).join(" · "), () => { S.locId = l.location_id; S.view = "locscheda"; }));
+  fornOrgs().filter(o => m(o.nome_breve) || m(o.ragione_sociale) || m(FORN[o.org_id]?.sottocategorie)).slice(0, 5).forEach(o => add("fornitore", o.nome_breve, fornCat(o).join(", "), () => { S.fornId = o.org_id; S.view = "fornscheda"; }));
+  D.ARTICOLI.filter(a => m(prod(a)) || m(a.nome)).slice(0, 4).forEach(a => add("articolo", prod(a), a.categoria, () => { S.art = a.articolo_id; }));
+  D.PERSONE.filter(p => m(p.nome + " " + p.cognome)).slice(0, 3).forEach(p => add("persona", `${p.nome} ${p.cognome}`, p.azienda, () => { S.view = "cal"; S.cal.tab = "persona"; S.cal.p = p.persona_id; }));
+  return out;
+}
+function renderPalette() {
+  const el = document.getElementById("palette"); if (!el) return;
+  if (!S.pal) { el.hidden = true; el.innerHTML = ""; return; }
+  const items = paletteItems(S.pal.q); S.pal.i = Math.min(S.pal.i, Math.max(0, items.length - 1));
+  el.hidden = false;
+  el.innerHTML = `<div class="pal" role="dialog" aria-label="Cerca in Doffy"><input id="pal-q" type="search" value="${esc(S.pal.q)}" placeholder="Cerca commesse, location, fornitori, articoli, persone…" autocomplete="off" aria-label="Cerca">
+    <div class="pal-list" role="listbox">${items.length ? items.map((x, i) => `<button class="pal-i" role="option" aria-selected="${i === S.pal.i}" data-pal="${i}"><span class="pal-k">${esc(x.tipo)}</span><span><b>${esc(x.t)}</b>${x.s ? `<br><span class="sub">${esc(x.s)}</span>` : ""}</span></button>`).join("") : `<div class="empty">Nessun risultato per “${esc(S.pal.q)}”.</div>`}</div>
+    <div class="pal-foot small muted">↑↓ scegli · Invio apri · Esc chiudi · <b>N</b> nuova commessa · <b>/</b> cerca nella vista</div></div>`;
+  const q = document.getElementById("pal-q"); q.focus(); q.setSelectionRange(q.value.length, q.value.length);
+}
+function paletteGo(i) { const x = paletteItems(S.pal.q)[i]; if (!x) return; document.activeElement?.blur(); S.pal = null; renderPalette(); x.go(); render(); window.scrollTo(0, 0); }
+document.addEventListener("keydown", e => {
+  const tag = (e.target.tagName || "").toLowerCase(), typing = e.target.isConnected && (["input", "select", "textarea"].includes(tag) || e.target.isContentEditable);
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); S.pal = S.pal ? null : { q: "", i: 0 }; renderPalette(); return; }
+  if (S.pal) {
+    if (e.key === "Escape") { S.pal = null; renderPalette(); }
+    else if (e.key === "ArrowDown") { e.preventDefault(); S.pal.i++; renderPalette(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); S.pal.i = Math.max(0, S.pal.i - 1); renderPalette(); }
+    else if (e.key === "Enter") { e.preventDefault(); paletteGo(S.pal.i); }
+    return;
+  }
+  if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === "n" || e.key === "N") { if (canCreate()) { e.preventDefault(); S.nc = null; S.view = "nuova"; render(); window.scrollTo(0, 0); } }
+  else if (e.key === "/") { const s = document.querySelector('main input[type="search"], main #m-q'); if (s) { e.preventDefault(); s.focus(); } else { e.preventDefault(); S.pal = { q: "", i: 0 }; renderPalette(); } }
+  else if (e.key === "Escape") { if (S.art) { S.art = null; render(); } else if (S.view === "scheda" || S.view === "locscheda" || S.view === "fornscheda") { S.view = S.view === "scheda" ? "progetti" : S.view === "locscheda" ? "location" : "fornitori"; render(); } }
+});
+document.addEventListener("input", e => { if (e.target.id === "pal-q") { S.pal.q = e.target.value; S.pal.i = 0; renderPalette(); } });
+document.addEventListener("click", e => { const b = e.target.closest("[data-pal]"); if (b) { paletteGo(+b.dataset.pal); return; } if (e.target.id === "palette") { S.pal = null; renderPalette(); } });
+
 /* ── indirizzo della vista (hash) e preferenze ricordate ── */
 const PREF_KEY = "doffy.pref";
 function prefLoad() { try { const p = JSON.parse(localStorage.getItem(PREF_KEY) || "{}"); if (p.loc) Object.assign(S.loc, p.loc); if (p.forn) Object.assign(S.forn, p.forn); if (p.filtro) S.filtro = p.filtro; if (p.calMag) S.mag.calMag = p.calMag; if (p.calTab) S.cal.tab = p.calTab; } catch (e) {} }
@@ -1195,19 +1273,19 @@ function routeOf() {
   if (v === "fornscheda" && S.fornId) return `/fornitori/${S.fornId}`;
   if (v === "magazzino") return `/magazzino/${S.mag.tab || "calendario"}`;
   if (v === "cal") return `/calendario/${S.cal.tab}`;
-  return "/" + (v === "progetti" ? "" : v);
+  return "/" + (v === "home" ? "" : v);
 }
 let ROUTING = false;
 function applyRoute(h) {
   const parts = (h || "").replace(/^#\/?/, "").split("/").map(decodeURIComponent).filter(Boolean);
   const [a, b, c] = parts;
-  if (!a) { S.view = "progetti"; return; }
+  if (!a) { S.view = "home"; return; }
   if (a === "commessa") { const cm = D.COMMESSE.find(x => codice(x) === b || x.commessa_id === b); if (cm) { S.comm = cm.commessa_id; S.view = "scheda"; S.stab = c && TABS_ALL.includes(c) ? c : "overview"; return; } }
   if (a === "location") { if (b && LOC[b]) { S.locId = b; S.view = "locscheda"; } else S.view = "location"; return; }
   if (a === "fornitori") { if (b && ORG[b]) { S.fornId = b; S.view = "fornscheda"; } else S.view = "fornitori"; return; }
   if (a === "magazzino") { S.view = "magazzino"; if (b) S.mag.tab = b; return; }
   if (a === "calendario") { S.view = "cal"; if (b) S.cal.tab = b; return; }
-  if (["nuova", "todo", "progetti"].includes(a)) { S.view = a; if (a === "nuova") S.nc = null; return; }
+  if (["nuova", "todo", "progetti", "home"].includes(a)) { S.view = a; if (a === "nuova") S.nc = null; return; }
   S.view = "progetti";
 }
 const TABS_ALL = ["overview", "prev", "persone", "materiale", "produzione", "viaggi", "ordini", "file", "sicurezza", "todo"];
@@ -1225,7 +1303,7 @@ function render() {
       <div><p class="lbl">${esc(art.categoria)}${art.sottocategoria ? " · " + esc(art.sottocategoria) : ""}</p><h2 id="mtitle" style="font-size:1.1rem;text-transform:none;letter-spacing:0;color:var(--fg);margin:2px 0 4px">${esc(prod(art))}</h2><p class="muted">${esc(art.nome)}</p>
       <dl class="spec">${[["Codice", art.codice], ["Peso", art.peso_kg ? art.peso_kg + " kg" : ""], ["Potenza", art.potenza_w ? art.potenza_w + " W" : ""], ["Proprietà", art.proprietario], ["Noleggio", art.prezzo_noleggio_giorno ? eur(art.prezzo_noleggio_giorno) + " / giorno" : ""], ["Tracciato a pezzo", art.tracciato_a_pezzo], ["Giacenze", D.GIACENZE.filter(g => g.articolo_id === art.articolo_id).map(g => `${g.quantita} ${shortMag(MAG[g.magazzino_id].nome)}`).join(" · ")]].filter(x => x[1]).map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
       <p class="small muted" style="margin-top:10px">Scheda tecnica e foto arriveranno dal database.</p></div></div></div>`;
-  el.innerHTML = (S.view === "nuova" ? vNuova() : S.view === "cal" ? vCal() :  S.view === "scheda" ? vScheda() : S.view === "magazzino" ? vMagazzino() : S.view === "location" ? vLocation() : S.view === "locscheda" ? vLocationScheda() : S.view === "fornitori" ? vFornitori() : S.view === "fornscheda" ? vFornitoreScheda() : S.view === "todo" ? vTodo() : vProgetti());
+  el.innerHTML = (S.view === "nuova" ? vNuova() : S.view === "cal" ? vCal() :  S.view === "scheda" ? vScheda() : S.view === "magazzino" ? vMagazzino() : S.view === "home" ? vHome() : S.view === "location" ? vLocation() : S.view === "locscheda" ? vLocationScheda() : S.view === "fornitori" ? vFornitori() : S.view === "fornscheda" ? vFornitoreScheda() : S.view === "todo" ? vTodo() : vProgetti());
 }
 const sel = document.getElementById("user");
 sel.innerHTML = USERS.map(p => `<option value="${p}">${esc(nome(p))} · ${esc(ruoli(p).map(r => RUOLO_NOME[r]).join(", "))}</option>`).join("");

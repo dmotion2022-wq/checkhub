@@ -13,6 +13,8 @@ const path = require('path');
     p.on('pageerror', e => errs.push(name + ': ' + e.message));
     await p.goto(url);
     await p.waitForTimeout(300);
+    // home "Oggi", poi l'elenco progetti
+    if (!await p.$('[data-open="CM-0001"]')) await p.click('[data-nav="progetti"]');
     await p.click('[data-open="CM-0001"]');
     for (const tab of ['prev', 'persone', 'materiale', 'file', 'overview']) {
       await p.click(`[data-stab="${tab}"]`);
