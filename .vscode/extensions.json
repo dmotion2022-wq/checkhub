@@ -1,0 +1,8 @@
+{
+  "recommendations": [
+    "ritwickdey.LiveServer",
+    "ms-python.python",
+    "dbaeumer.vscode-eslint",
+    "anthropic.claude-code"
+  ]
+}

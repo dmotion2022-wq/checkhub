@@ -1,6 +1,25 @@
-# Doffy · schema database
+# Doffy
 
-Schema del database del **Doffy**, l'applicativo comune di Chedo e Nakama per commesse, anagrafiche, magazzino, calendario delle risorse e preventivi. Il database previsto è **Supabase (Postgres)**.
+**Doffy** è l'applicativo comune di Chedo e Nakama per commesse, anagrafiche, magazzino, calendario delle risorse e preventivi. Questo repository contiene il frontend (oggi una demo con dati fittizi) e lo schema del database, previsto su **Supabase (Postgres)**.
+
+## Avvio in locale (VS Code)
+
+```bash
+git clone https://github.com/dmotion2022-wq/checkhub.git doffy
+cd doffy
+code .
+```
+
+Il frontend è statico, senza build: tre file in `app/` (`index.html`, `css/app.css`, `js/app.js`) più `js/data.js` con i dati di esempio.
+
+- **Con Live Server** (estensione consigliata, VS Code la propone all'apertura): tasto destro su `app/index.html` → *Open with Live Server*. Ogni salvataggio ricarica la pagina.
+- **Senza estensioni**: `npm run dev` e poi http://localhost:8080 (usa Python, già presente su macOS e Linux).
+- **Test**: `npm install` una volta, poi `npm test` apre l'app in un browser headless, visita tutte le viste a 1280 e 400 px e fallisce se ci sono errori JavaScript o scorrimento orizzontale. Salva due screenshot in `tests/`.
+- **Schema**: `npm run schema` rigenera la migrazione SQL e `docs/schema.json` dai file in `schema/` (vedi sotto).
+
+Prossimo passo: sostituire `js/data.js` con le letture da Supabase (`@supabase/supabase-js`), tabella per tabella, senza cambiare le viste.
+
+## Schema database
 
 **Consulta lo schema online:** https://dmotion2022-wq.github.io/checkhub/
 
@@ -10,6 +29,9 @@ Schema del database del **Doffy**, l'applicativo comune di Chedo e Nakama per co
 
 | Percorso | Cosa contiene |
 |---|---|
+| `app/` | Frontend: `index.html`, `css/app.css`, `js/app.js` (stato `S`, viste `v*`, render con `innerHTML` e delega degli eventi via `data-*`), `js/data.js` (dati fittizi) |
+| `tests/smoke.js` | Test di fumo con Playwright (`npm test`) |
+| `.vscode/` | Estensioni consigliate, Live Server, avvio nel browser |
 | `schema/core_v1.py` | Nucleo v1 (doc 09): configurazione e ruoli, persone, CRM, commesse, file e AI, magazzino, economia, operatività |
 | `schema/anagrafiche_v1.py` | Anagrafiche (doc 10): location e spazi, hotel, ristoranti e catering, fornitori e offerte, trasporti, esperienze e talent, documenti, validazione delle singole voci |
 | `schema/anagrafiche_v1.json` | Le stesse anagrafiche in JSON, per l'interfaccia di validazione |
