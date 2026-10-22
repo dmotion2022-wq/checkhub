@@ -624,6 +624,7 @@ create table articoli (
   lunghezza_cm numeric,
   larghezza_cm numeric,
   altezza_cm numeric,
+  potenza_media_w numeric,
   potenza_w numeric,
   proprietario text,
   prezzo_noleggio_giorno numeric(12,2),
@@ -644,6 +645,7 @@ create table articoli (
 comment on table articoli is '05 · LOCATION E MAGAZZINO · Location con il proprio magazzino, catalogo, giacenze, prenotazioni, movimenti';
 comment on column articoli.categoria is 'es. 04 truss & rigging';
 comment on column articoli.tracciato_a_pezzo is 'sì = ogni pezzo ha un numero di serie';
+comment on column articoli.potenza_w is 'potenza massima';
 comment on column articoli.proprietario is 'Chedo, Musiclab…';
 comment on column articoli.fornitore_org_id is 'per i consumabili';
 comment on column articoli.ordine_standard is 'quantità di riordino';
@@ -746,8 +748,11 @@ create table listino (
   voce_id text primary key,
   codice text,
   categoria text,
+  sezione text,
   descrizione_preventivo text,
-  unita text,
+  quantita_standard numeric,
+  unita text check (unita in ('servizio', 'giorno', 'ora', 'pezzo', 'persona', 'forfait', 'km', 'mq', 'metro lineare')),
+  note_prezzo text,
   prezzo_vendita numeric(12,2),
   costo_standard numeric(12,2),
   ricarico_standard numeric(7,3),
@@ -763,6 +768,9 @@ create table listino (
 );
 comment on table listino is '06 · ECONOMIA · Listino, costing, preventivi, fatture, rebate';
 comment on column listino.categoria is 'service, allestimenti, grafiche, personale, segreteria…';
+comment on column listino.sezione is 'sezione del listino Chedo, es. LUCI · MOTORIZZATI';
+comment on column listino.quantita_standard is 'quantità con cui la voce compare di solito';
+comment on column listino.note_prezzo is 'es. n°8 a magazzino';
 comment on column listino.articolo_id is 'se legata a un articolo';
 comment on column listino.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table listino enable row level security;
