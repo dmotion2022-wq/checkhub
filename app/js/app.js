@@ -95,13 +95,12 @@ function vProgetti() {
   return `
   <div class="view-head"><div><h1>Progetti</h1></div>
     <div class="filters" role="group" aria-label="Filtro">
-      ${canCreate() ? `<button class="btn" data-nav="nuova">+ Nuova commessa</button>` : ""}
       ${[["attive", "In lavorazione"], ["prospect", "Prospect"], ["tutte", "Tutte"]].map(([k, l]) => `<button class="chip" data-filtro="${k}" aria-pressed="${S.filtro === k}">${l}</button>`).join("")}
     </div></div>
   ${rows.length ? `<div class="plist">${rows.map(c => `
     <button class="prow az-${c.azienda_capofila === "Nakama" ? "nk" : "ch"}" data-open="${c.commessa_id}">
       <span><span class="code">${esc(codice(c))}</span></span>
-      <span style="min-width:0"><span class="t">${esc(c.titolo_evento)}</span><br><span class="sub">${esc(org(c.cliente_org_id))}${c.agenzia_org_id ? " · via " + esc(org(c.agenzia_org_id)) : ""}${c.location_id ? " · " + esc(LOC[c.location_id].nome) : ""}</span></span>
+      <span style="min-width:0"><span class="t">${esc(c.titolo_evento)}</span><br><span class="sub">${esc(org(c.cliente_org_id))}${c.agenzia_org_id ? " · via " + esc(org(c.agenzia_org_id)) : ""}${" · " + esc(locTxt(c, false))}</span></span>
       <span class="sub c-who">PM ${esc(nome(c.pm_persona_id))}</span>
       <span class="sub c-dates mono">${fd(c.data_inizio)}${c.data_fine !== c.data_inizio ? "–" + fd(c.data_fine) : ""}</span>
       <span>${pill(c.stato, STATO_CLS[c.stato])}</span>
@@ -145,7 +144,7 @@ function vScheda() {
       <div class="facts">
         <div><div class="lbl">Cliente</div><div class="v">${esc(org(c.cliente_org_id))}${c.agenzia_org_id ? ` <span class="muted">via ${esc(org(c.agenzia_org_id))}</span>` : ""}</div></div>
         <div><div class="lbl">Date</div><div class="v mono">${fd(c.data_inizio)}${c.data_fine !== c.data_inizio ? " – " + fd(c.data_fine) : ""}${c.ora_inizio ? ` · ${c.ora_inizio}–${c.ora_fine}` : ""}</div></div>
-        <div><div class="lbl">Location</div><div class="v">${c.location_id ? esc(LOC[c.location_id].nome) : "da definire"}</div></div>
+        <div><div class="lbl">Location</div><div class="v">${esc(locTxt(c))}</div></div>
         <div><div class="lbl">Pax</div><div class="v mono">${c.pax ?? "—"}</div></div>
         ${(() => { const r = c.referente_contatto_id && D.CONTATTI.find(x => x.contatto_id === c.referente_contatto_id); return r ? `<div><div class="lbl">Referente</div><div class="v">${esc(r.nome + " " + r.cognome)} <span class="muted small">${esc(r.email || "")}</span></div></div>` : ""; })()}
         ${sg ? `<div><div class="lbl">Segnalazione</div><div class="v">${esc(org(sg.partner_org_id))} <span class="muted small">rebate ${rb ? eur(rb.importo) : ""}</span></div></div>` : ""}
@@ -207,7 +206,7 @@ function vScheda() {
   <div class="sheet-head band band-${c.azienda_capofila === "Nakama" ? "nk" : "ch"}">
     <div class="title-row"><div class="hier">
         <h1>${esc(c.titolo_evento)} <span class="hcode">${esc(codice(c))}</span></h1>
-        <div class="hloc">${c.location_id ? esc(LOC[c.location_id].nome) + (LOC[c.location_id].citta ? ", " + esc(LOC[c.location_id].citta) : "") : "Location da definire"}</div>
+        <div class="hloc">${esc(locTxt(c))}</div>
         <div class="hpm">PM ${esc(nome(c.pm_persona_id))}${c.backup_persona_id ? ` <span>· backup ${esc(nome(c.backup_persona_id))}</span>` : ""} <span>· ${pill(c.stato, STATO_CLS[c.stato])}</span></div></div>
       ${pv ? `<div class="pv-chip"><span class="small">Preventivo v${pv.ver} ${pill(PV_STATO[pv.stato][0], PV_STATO[pv.stato][1])} <b class="mono">${eur(pvTot(pv).tot)}</b></span></div>` : pvEditor() ? `<button class="btn" data-pvcreate="${cid}">Crea preventivo</button>` : ""}</div>
     <div class="subtabs" role="tablist">${TABS.map(([k, t, n]) => `<button role="tab" data-stab="${k}" aria-selected="${S.stab === k}">${t}${n ? ` <span class="tn">${n}</span>` : ""}</button>`).join("")}</div>
@@ -465,7 +464,7 @@ function generaFasi(c, P) {
   const out = [], days = [], allDays = [];
   for (let k = c.data_inizio; k <= c.data_fine; k = addDays(k, 1)) days.push(k);
   for (let i = +P.all_giorni; i >= 1; i--) allDays.push(addDays(c.data_inizio, -i));
-  const luogo = c.location_id ? LOC[c.location_id].nome : (c.location_nome || "location da definire"), mag = MAG[P.mag].nome;
+  const luogo = locTxt(c, false), mag = MAG[P.mag].nome;
   const proveDa = addMin(`${days[0]} ${P.ev_inizio}`, -P.prove_ore * 60);
   const primo = allDays.length ? `${allDays[0]} ${P.all_inizio}` : proveDa;
   const partenza = addMin(primo, -P.viaggio_min);
@@ -733,8 +732,8 @@ const SCHEDE_OPZ = [["materiale", "Materiale e trasporti", "Serve materiale dal 
   ["sicurezza", "Sicurezza", "Servono documenti di sicurezza (DUVRI, POS, piano di emergenza)?"],
   ["todo", "To-Do", "Il lavoro si segue con i to-do di ClickUp?"]];
 function ncDefault() {
-  return { step: 1, titolo: "", capofila: PER[S.user]?.azienda === "Nakama" ? "Nakama" : "Chedo", cliente: "", cliente_nuovo: "", agenzia: "", ref_nome: "", ref_email: "", ref_cell: "",
-    location: "", loc_nome: "", loc_indirizzo: "", sales: "P07", pm: ruoli(S.user).includes("PM") ? S.user : "P04", backup: "", lead: "", lead_tipo: "rebate", lead_pct: 5, catering: "",
+  return { step: 1, tipo: "P", citta: "", titolo: "", capofila: PER[S.user]?.azienda === "Nakama" ? "Nakama" : "Chedo", cliente: "", cliente_nuovo: "", agenzia: "", ref_nome: "", ref_email: "", ref_cell: "",
+    location: "", loc_nome: "", loc_indirizzo: "", sales: "P07", pm: S.user, backup: "", lead: "", lead_tipo: "rebate", lead_pct: 5, catering: "",
     dal: "2027-02-18", al: "2027-02-18", ora_inizio: "09:00", ora_fine: "18:00", pax: 150, schede: {}, doc_modo: "carica", docs: [], cartella: "" };
 }
 const ncCliente = n => n.cliente && n.cliente !== "nuovo" ? org(n.cliente) : (n.cliente_nuovo.trim() || "Nuovo cliente");
@@ -759,6 +758,7 @@ function vNuova() {
   let body = "";
   if (n.step === 1) body = `<div class="nc-grid">
     <section class="panel"><h2>Commessa</h2><div class="form">
+      <div class="field"><span class="lbl">Codice</span><div class="nc-code"><div class="seg" role="radiogroup" aria-label="Tipo di codice">${[["P", "P · prospect"], ["D", "D · definitiva"]].map(([v, t]) => `<button type="button" role="radio" aria-checked="${n.tipo === v}" data-nctipo="${v}">${t}</button>`).join("")}</div><b class="nc-codeval">${nextCodice(n.tipo)}</b></div></div>
       ${F("titolo", "Nome commessa", inp("titolo", "text", 'required placeholder="es. Vela Pharma · Convention 2027"'))}
       <div class="row">${F("capofila", "Azienda capofila", sel("capofila", [["Chedo", "Chedo"], ["Nakama", "Nakama"]]))}${F("pax", "Pax previsti", inp("pax", "number", 'min="0"'))}</div>
       <div class="row">${F("cliente", "Cliente", sel("cliente", [...ORGS(o => o.e_cliente === "sì"), ["nuovo", "+ nuovo cliente"]], "Scegli…"))}
@@ -768,14 +768,14 @@ function vNuova() {
         ${n.lead ? `<div class="row" style="grid-template-columns:1fr 80px">${F("lead_tipo", "Riconoscimento", sel("lead_tipo", [["rebate", "rebate"], ["sconto", "sconto in fattura"]]))}${F("lead_pct", "%", inp("lead_pct", "number", 'min="0" max="30" step="0.5"'))}</div>` : "<div></div>"}</div>
       <div class="row">${F("ref_nome", "Referente del cliente", inp("ref_nome", "text", 'placeholder="Nome e cognome"'))}${F("ref_email", "Email", inp("ref_email", "email"))}</div>
       <div class="row">${F("ref_cell", "Cellulare", inp("ref_cell", "tel"))}<div></div></div>
-      <div class="row">${F("location", "Location", sel("location", [...D.LOCATION.map(l => [l.location_id, `${l.nome} · ${l.citta}`]), ["nuova", "+ location non in anagrafica"]], "Da definire"))}
-        ${n.location === "nuova" ? F("loc_nome", "Nome location", inp("loc_nome")) : `<div class="field"><span class="lbl">Indirizzo</span><span class="small" style="padding:7px 0">${n.location ? esc(LOC[n.location].indirizzo + ", " + LOC[n.location].citta) : "—"}</span></div>`}</div>
+      <div class="row">${F("location", "Location", sel("location", [["digitale", "Digitale (online)"], ...D.LOCATION.filter(l => l.stato !== "inattiva").sort((a, b) => a.nome.localeCompare(b.nome)).map(l => [l.location_id, `${l.nome}${l.citta ? " · " + l.citta : ""}`]), ["nuova", "+ location non in anagrafica"]], "Da definire"))}
+        ${n.location === "nuova" ? F("loc_nome", "Nome location", inp("loc_nome")) : n.location === "digitale" ? "<div></div>" : n.location ? `<div class="field"><span class="lbl">Indirizzo</span><span class="small" style="padding:7px 0">${esc([LOC[n.location].indirizzo, LOC[n.location].citta].filter(Boolean).join(", "))}</span></div>` : F("citta", "Città", inp("citta", "text", 'placeholder="es. Milano" autocomplete="address-level2"'))}</div>
       ${n.location === "nuova" ? F("loc_indirizzo", "Indirizzo", inp("loc_indirizzo")) : ""}
       <div class="row">${F("dal", "Evento dal", `<div class="dt">${inp("dal", "date", "required")}<input type="time" id="nc-ora_inizio" value="${n.ora_inizio}" data-nc="ora_inizio" aria-label="Ora di inizio" required></div>`)}
         ${F("al", "al", `<div class="dt">${inp("al", "date", `required min="${n.dal}"`)}<input type="time" id="nc-ora_fine" value="${n.ora_fine}" data-nc="ora_fine" aria-label="Ora di fine" required></div>`)}</div>
     </div></section>
     <section class="panel"><h2>Persone</h2><div class="form">
-      <div class="row">${F("pm", "PM", sel("pm", pers(["PM"])))}${F("backup", "PM backup", sel("backup", pers(["PM"]).filter(p => p[0] !== n.pm), "Nessuno"))}</div>
+      <div class="row">${F("pm", "PM", sel("pm", [[S.user, `${nome(S.user)} (tu)`], ...pers(["PM", "DIR"]).filter(p => p[0] !== S.user)]))}${F("backup", "PM backup", sel("backup", pers(["PM"]).filter(p => p[0] !== n.pm), "Nessuno"))}</div>
       <div class="row">${F("sales", "Sales", sel("sales", pers(["COM", "DIR"]), "Nessuno"))}<div></div></div>
     </div></section></div>`;
   else if (n.step === 2) body = `<section class="panel"><h2>Schede del progetto</h2>
@@ -815,23 +815,29 @@ function ncAvanti() {
   }
   n.step++; render(); window.scrollTo(0, 0);
 }
+function nextCodice(tipo) { const k = tipo === "D" ? "codice_definitivo" : "codice_prospect"; const m = D.COMMESSE.reduce((x, c) => Math.max(x, +(c[k] || "").slice(4) || 0), 0); return `${tipo}26-${String(m + 1).padStart(3, "0")}`; }
+function locTxt(c, conCitta = true) {
+  if (c.location_tipo === "digitale") return "Digitale";
+  if (c.location_id && LOC[c.location_id]) return LOC[c.location_id].nome + (conCitta && LOC[c.location_id].citta ? ", " + LOC[c.location_id].citta : "");
+  return "Location da definire" + (c.citta ? " · " + c.citta : "");
+}
 function nextProspect() { const m = D.COMMESSE.reduce((x, c) => Math.max(x, +(c.codice_prospect || "").slice(4) || 0), 0); return "P26-" + String(m + 1).padStart(3, "0"); }
 function creaCommessa() {
   const n = S.nc;
-  const cid = "CM-" + String(D.COMMESSE.length + 1).padStart(4, "0"), cod = nextProspect();
+  const cid = "CM-" + String(D.COMMESSE.length + 1).padStart(4, "0"), cod = nextCodice(n.tipo), D_ = n.tipo === "D";
   let cli = n.cliente;
   if (cli === "nuovo" || !cli) { cli = "ORG-" + String(D.ORGANIZZAZIONI.length + 1).padStart(3, "0"); D.ORGANIZZAZIONI.push({ org_id: cli, nome_breve: n.cliente_nuovo || "Cliente da definire", ragione_sociale: n.cliente_nuovo, e_cliente: "sì", e_agenzia: "no", e_partner: "no", e_fornitore: "no" }); ORG[cli] = D.ORGANIZZAZIONI.at(-1); }
-  let loc = n.location;
+  let loc = n.location === "digitale" ? "" : n.location;
   if (loc === "nuova") { loc = "LOC-" + String(D.LOCATION.length + 1).padStart(2, "0"); D.LOCATION.push({ location_id: loc, nome: n.loc_nome || "Nuova location", citta: "", indirizzo: n.loc_indirizzo }); LOC[loc] = D.LOCATION.at(-1); }
   let ref = "";
   if (n.ref_nome) { ref = "CT-" + String(D.CONTATTI.length + 1).padStart(2, "0"); const [nm, ...cg] = n.ref_nome.split(" "); D.CONTATTI.push({ contatto_id: ref, org_id: cli, nome: nm, cognome: cg.join(" "), email: n.ref_email, telefono: n.ref_cell, principale: "sì" }); }
   const schede = SCHEDE_OPZ.map(s => s[0]).filter(k => n.schede[k]);
   const cartella = n.doc_modo === "collega" ? n.cartella : `${cod} · ${n.titolo.trim()}`;
-  const c = { commessa_id: cid, codice_prospect: cod, codice_definitivo: "", stato: "prospect", titolo_evento: n.titolo.trim(), cliente_org_id: cli, committente_org_id: n.agenzia || cli, agenzia_org_id: n.agenzia,
+  const c = { commessa_id: cid, codice_prospect: D_ ? "" : cod, codice_definitivo: D_ ? cod : "", stato: D_ ? "confermata" : "prospect", location_tipo: n.location === "digitale" ? "digitale" : loc ? "anagrafica" : "da definire", citta: n.location === "digitale" ? "" : loc && LOC[loc] ? LOC[loc].citta : n.citta.trim(), titolo_evento: n.titolo.trim(), cliente_org_id: cli, committente_org_id: n.agenzia || cli, agenzia_org_id: n.agenzia,
     azienda_capofila: n.capofila, data_inizio: n.dal, data_fine: n.al < n.dal ? n.dal : n.al, ora_inizio: n.ora_inizio, ora_fine: n.ora_fine, location_id: loc, pax: +n.pax || null, pm_persona_id: n.pm, backup_persona_id: n.backup,
     sales_persona_id: n.sales, referente_contatto_id: ref, catering_org_id: n.catering, lead_org_id: n.lead, lead_tipo: n.lead_tipo, lead_pct: n.lead ? +n.lead_pct : null,
     schede, modulo_produzione: schede.includes("produzione") ? "sì" : "no", modulo_logistica: schede.includes("materiale") || schede.includes("viaggi") ? "sì" : "no", modulo_creativita: "no",
-    data_richiesta: TODAY, drive_cartella: `Clienti / ${org(cli)} / ${cartella}` };
+    data_richiesta: TODAY, creata_da: S.user, data_conferma: D_ ? TODAY : "", confermata_da: D_ ? S.user : "", drive_cartella: `Clienti / ${org(cli)} / ${cartella}` };
   D.COMMESSE.push(c); COM[cid] = c;
   n.docs.forEach((f, i) => D.FILE.push({ file_id: `F-${cid}-${i + 1}`, commessa_id: cid, location_id: "", cartella: "01_BRIEF E COMMERCIALE", nome: f, tipo_documento: "", versione: 1, mime_type: /\.pdf$/i.test(f) ? "application/pdf" : "", modificato_il: TODAY + " " + new Date().toTimeString().slice(0, 5), stato_indice: "letto" }));
   const letti = n.doc_modo === "collega" ? `i file della cartella ${n.cartella}` : n.docs.length ? `${n.docs.length} ${n.docs.length > 1 ? "documenti" : "documento"}` : "";
@@ -1109,7 +1115,8 @@ function vFornitoreScheda() {
 }
 
 function render() {
-  document.querySelectorAll("[data-nav]").forEach(b => b.closest("nav") && b.setAttribute("aria-current", (S.view === b.dataset.nav || ((S.view === "scheda" || S.view === "nuova") && b.dataset.nav === "progetti")) ? "page" : "false"));
+  const nb = document.querySelector(".new-btn"); if (nb) { nb.hidden = !canCreate(); nb.setAttribute("aria-current", S.view === "nuova" ? "page" : "false"); }
+  document.querySelectorAll("[data-nav]").forEach(b => b.closest("nav") && b.setAttribute("aria-current", (S.view === b.dataset.nav || (S.view === "scheda" && b.dataset.nav === "progetti") || (S.view === "locscheda" && b.dataset.nav === "location") || (S.view === "fornscheda" && b.dataset.nav === "fornitori")) ? "page" : "false"));
   const el = document.getElementById("main");
   OCC = null;
   const art = S.art && ART[S.art]; document.getElementById("modal").hidden = !art;
@@ -1132,9 +1139,10 @@ const addRow = (r, label) => { const pv = curPV(); const ex = pv.righe.find(x =>
 const evDays = () => { const c = COM[S.comm]; return giorni(c.data_inizio, c.data_fine); };
 
 document.addEventListener("click", e => {
-  const t = e.target.closest("[data-locopen],[data-fornopen],[data-locf],[data-fornf],[data-nav],[data-open],[data-filtro],[data-tmine],[data-tstato],[data-conferma],[data-confall],[data-mtab],[data-pvcreate],[data-pvopen],[data-src],[data-addinv],[data-addloc],[data-addlis],[data-addgra],[data-rm],[data-ropz],[data-ralt],[data-pvact],[data-calnav],[data-calgo],[data-stab],[data-reqtoggle],[data-confsel],[data-magev],[data-art],[data-artclose],[data-dir],[data-file],[data-sez],[data-genpiano],[data-slconf],[data-slopz],[data-sloff],[data-sladd],[data-fbrm],[data-fbprev],[data-ctab],[data-wk],[data-wkgo],[data-mese],[data-mesego],[data-calpp],[data-ncstep],[data-ncsk],[data-ncdoc],[data-ncrm]");
+  const t = e.target.closest("[data-nctipo],[data-locopen],[data-fornopen],[data-locf],[data-fornf],[data-nav],[data-open],[data-filtro],[data-tmine],[data-tstato],[data-conferma],[data-confall],[data-mtab],[data-pvcreate],[data-pvopen],[data-src],[data-addinv],[data-addloc],[data-addlis],[data-addgra],[data-rm],[data-ropz],[data-ralt],[data-pvact],[data-calnav],[data-calgo],[data-stab],[data-reqtoggle],[data-confsel],[data-magev],[data-art],[data-artclose],[data-dir],[data-file],[data-sez],[data-genpiano],[data-slconf],[data-slopz],[data-sloff],[data-sladd],[data-fbrm],[data-fbprev],[data-ctab],[data-wk],[data-wkgo],[data-mese],[data-mesego],[data-calpp],[data-ncstep],[data-ncsk],[data-ncdoc],[data-ncrm]");
   if (!t) return;
   const d = t.dataset;
+  if (d.nctipo) { S.nc.tipo = d.nctipo; render(); document.querySelector(`[data-nctipo="${d.nctipo}"]`)?.focus(); return; }
   if (d.locopen) { S.locId = d.locopen; S.view = "locscheda"; render(); window.scrollTo(0, 0); return; }
   if (d.fornopen) { S.fornId = d.fornopen; S.view = "fornscheda"; render(); window.scrollTo(0, 0); return; }
   if (d.locf === "esterno") { S.loc.esterno = !S.loc.esterno; render(); return; }
