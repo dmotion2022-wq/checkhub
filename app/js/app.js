@@ -1056,8 +1056,8 @@ function vLocationScheda() {
         ${fattoDi("Spazio esterno", l.spazio_esterno && l.spazio_esterno !== "no" ? esc(l.spazio_esterno) : "")}
         ${fattoDi("Eventi adatti", lista(l.eventi_adatti).join(", "))}
       </div>
-      ${sale.length ? `<section class="panel"><h2>Sale</h2><table><thead><tr><th>Sala</th><th class="num">mq</th><th class="num">In piedi</th><th class="num">Seduti</th><th class="num">Evento</th><th class="num">Setup</th></tr></thead>
-        <tbody>${sale.map(s => `<tr><td>${esc(s.nome)}${s.principale === "sì" ? ` ${pill("principale", "p-acc")}` : ""}</td><td class="num">${num0(s.mq)}</td><td class="num">${num0(s.capienza_standing)}</td><td class="num">${num0(s.capienza_seduti)}</td><td class="num">${s.prezzo_giorno ? eur(s.prezzo_giorno) : ""}</td><td class="num">${s.prezzo_setup ? eur(s.prezzo_setup) : ""}</td></tr>`).join("")}</tbody></table></section>` : ""}
+      ${sale.length ? `<section class="panel"><h2>Sale</h2><div class="tbl-wrap"><table><thead><tr><th>Sala</th><th class="num">mq</th><th class="num">In piedi</th><th class="num">Seduti</th><th class="num">Evento</th><th class="num">Setup</th></tr></thead>
+        <tbody>${sale.map(s => `<tr><td>${esc(s.nome)}${s.principale === "sì" ? ` ${pill("principale", "p-acc")}` : ""}</td><td class="num">${num0(s.mq)}</td><td class="num">${num0(s.capienza_standing)}</td><td class="num">${num0(s.capienza_seduti)}</td><td class="num">${s.prezzo_giorno ? eur(s.prezzo_giorno) : ""}</td><td class="num">${s.prezzo_setup ? eur(s.prezzo_setup) : ""}</td></tr>`).join("")}</tbody></table></div></section>` : ""}
       <section class="panel"><h2>Tecnica e servizi</h2><div class="facts bare">
         ${fattoDi("Attrezzature residenti", l.attrezzature_residenti && l.attrezzature_residenti !== "no" ? esc(l.attrezzature_residenti) : l.attrezzature_residenti === "no" ? "nessuna" : "")}
         ${fattoDi("Potenza elettrica", l.potenza_elettrica_kw ? l.potenza_elettrica_kw + " kW" : "")}

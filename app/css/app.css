@@ -514,3 +514,9 @@ label.drow > span:first-of-type{flex:1;min-width:0;overflow:hidden;text-overflow
 .form-new{margin-bottom:24px;border-color:var(--accent)}
 .form .row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 @media (max-width:600px){.form .row3{grid-template-columns:minmax(0,1fr)}}
+
+/* verifiche ui-ux-pro-max (22 ottobre): bersagli touch e transizioni */
+.card,.prow,.seg button,.chip,.linkbtn{transition:background-color .15s,border-color .15s,color .15s}
+@media (prefers-reduced-motion:reduce){.card,.prow,.seg button,.chip,.linkbtn,.btn,nav.tabs button{transition:none}}
+@media (max-width:860px){.chip,.seg button,.btn.sm,.filters select,.filters input{min-height:36px}}
+.prow.prow-a:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}

@@ -24,7 +24,7 @@ Lo schema viene modificato da più persone, da più dispositivi e da più sessio
 - Nel frontend il calendario ha tre viste: generale (mese, tutte le commesse), persona (settimana), planning (persone × giorni).
 
 ## Linee guida UI del gestionale (dal 19 ottobre)
-Riviste con la skill ui-ux-pro-max (stile "Minimalism & Swiss", densità alta):
+Riviste con la skill ui-ux-pro-max (stile "Minimalism & Swiss", densità alta). La skill è nel repository, in `.claude/skills/ui-ux-pro-max`: prima di un lavoro di interfaccia interrogarla con `python3 .claude/skills/ui-ux-pro-max/scripts/search.py "<domanda>" --domain ux` (o `--design-system` per una vista nuova) e seguire la sua checklist di consegna. Le scelte già prese qui sotto (Inter, un solo accento, niente monospace) prevalgono sui suoi suggerimenti di palette e font.
 - Sfondo bianco, tema chiaro unico (niente tema scuro). Un solo accento (blu), neutri slate, bordi al posto delle ombre, raggio 6px, ritmo a 8px, testo base 13px. Dal 22 ottobre i blocchi respirano: pannelli con 18–20px di padding, 20px tra i pannelli e le colonne, 16px tra le card, 24px sotto intestazioni e barre dei filtri.
 - Un'unica famiglia: Inter. Niente monospace; i numeri usano le cifre tabulari di Inter.
 - Colore azienda: Chedo #367BAD (il blu del logo), Nakama #FF8A00. Si usa come gradiente leggero nell'intestazione della scheda progetto e come striscia a sinistra nelle righe dell'elenco progetti. Non altrove.
