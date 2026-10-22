@@ -22,6 +22,22 @@ const path = require('path');
       await p.click(`[data-nav="${nav}"]`);
       await p.waitForTimeout(80);
     }
+    // nuova commessa a passi: commessa → schede → documenti
+    await p.click('[data-nav="nuova"]');
+    await p.fill('#nc-titolo', 'Commessa di prova');
+    await p.dispatchEvent('#nc-titolo', 'change');
+    await p.selectOption('#nc-cliente', 'ORG-001');
+    await p.click('#ncform button[type=submit]');
+    await p.click('[data-ncsk="produzione"][data-v="1"]');
+    await p.click('#ncform button[type=submit]');
+    await p.setInputFiles('#nc-files', { name: 'brief.pdf', mimeType: 'application/pdf', buffer: Buffer.from('x') });
+    await p.screenshot({ path: path.join(__dirname, `screenshot-${name}-nuova.png`) });
+    await p.click('#ncform button[type=submit]');
+    for (const tab of ['produzione', 'file', 'persone']) {
+      if (!await p.$(`[data-stab="${tab}"]`)) errs.push(`${name}: manca la scheda ${tab} nella commessa creata`);
+      else await p.click(`[data-stab="${tab}"]`);
+    }
+    await p.click('[data-nav="progetti"]');
     const sw = await p.evaluate(() => document.documentElement.scrollWidth);
     if (sw > w) errs.push(`${name}: scorrimento orizzontale (${sw}px su ${w}px)`);
     await p.screenshot({ path: path.join(__dirname, `screenshot-${name}.png`) });

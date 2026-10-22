@@ -444,3 +444,34 @@ button.drow:hover,.dfile:hover{background:var(--surface-2)}
 .empty{padding:20px;text-align:center;color:var(--muted);border:1px dashed var(--line-2);border-radius:var(--r);font-size:.75rem}
 .foot{display:none}
 @media (prefers-reduced-motion:no-preference){.prow,.chip,nav.tabs button,.btn{transition:background-color .12s,color .12s}}
+/* nuova commessa a passi */
+.wiz{display:flex;gap:4px;list-style:none;margin:0 0 12px;padding:0;flex-wrap:wrap}
+.wiz li > *{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--muted);font-weight:500;font-size:.8125rem}
+.wiz .wn{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:4px;background:var(--surface-2);font-size:.6875rem;font-weight:600}
+.wiz li.cur > *{color:var(--fg);border-color:var(--accent)}
+.wiz li.cur .wn{background:var(--accent);color:var(--on-accent)}
+.wiz li.done .wn{background:var(--ok-bg);color:var(--ok)}
+.wiz li.done button:hover{background:var(--surface-2)}
+.wiz-narrow{max-width:760px}
+.wiz-foot{display:flex;gap:8px;margin-top:12px}
+.wiz-foot .btn[type=submit]{margin-left:auto}
+.nc-grid .panel{min-width:0}
+.dt{display:grid;grid-template-columns:minmax(0,1fr) 112px;gap:6px}
+.sk-list{display:flex;flex-direction:column}
+.sk{display:grid;grid-template-columns:170px minmax(0,1fr) auto;justify-items:start;gap:12px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.sk:first-child{border-top:0}
+.sk > :last-child{justify-self:end}
+@media (max-width:600px){.sk{grid-template-columns:minmax(0,1fr) auto}.sk-q{grid-column:1/-1;grid-row:2}.sk-q:empty{display:none}}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:var(--r);overflow:hidden}
+.seg button{background:var(--surface);border:0;padding:4px 12px;font-size:.8125rem;font-weight:500;color:var(--muted)}
+.seg button + button{border-left:1px solid var(--line-2)}
+.seg button[aria-pressed="true"]{background:var(--accent-weak);color:var(--accent);font-weight:600}
+.seg.wide{display:flex;margin-bottom:12px}
+.seg.wide button{flex:1;padding:6px 12px}
+.drop{display:flex;flex-direction:column;align-items:center;gap:2px;padding:20px;border:1px dashed var(--line-2);border-radius:var(--r);cursor:pointer;margin-bottom:8px;text-align:center}
+.drop:hover,.drop:focus-within{border-color:var(--accent);background:var(--accent-weak)}
+.drop input{position:absolute;opacity:0;width:1px;height:1px}
+.drop b{color:var(--accent)}
+label.drow{cursor:pointer}
+label.drow.dis{cursor:default;opacity:.6}
+label.drow > span:first-of-type{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

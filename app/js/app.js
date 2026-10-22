@@ -129,10 +129,13 @@ function vScheda() {
   const fasi = D.FASI.filter(f => f.commessa === cid).sort((x, y) => x.dal.localeCompare(y.dal));
   const trasp = fasi.filter(f => ["carico", "andata", "ritorno", "scarico"].includes(f.tipo));
 
+  const has = k => (c.schede || []).includes(k);
   const TABS = [["overview", "Overview"], ["prev", "Preventivo", pv ? pvTot(pv).n : 0], ["persone", "Persone", team.length + (sc.n ? ` · ${sc.n} scoperti` : "")],
-    pren.length || trasp.length ? ["materiale", "Materiale e trasporti", pren.length] : null, ord.length ? ["ordini", "Ordini", ord.length] : null,
-    files.length ? ["file", "File", files.length] : null, sic.length ? ["sicurezza", "Sicurezza", sic.filter(x => x.stato !== "ok").length || ""] : null,
-    todo.length ? ["todo", "To-Do", todo.filter(t => t.stato !== "fatto").length] : null].filter(Boolean);
+    pren.length || trasp.length || has("materiale") ? ["materiale", "Materiale e trasporti", pren.length] : null,
+    has("produzione") ? ["produzione", "Produzione"] : null, has("viaggi") ? ["viaggi", "Trasporti e voli"] : null,
+    ord.length || has("ordini") ? ["ordini", "Ordini", ord.length] : null,
+    files.length || c.drive_cartella ? ["file", "File", files.length] : null, sic.length || has("sicurezza") ? ["sicurezza", "Sicurezza", sic.filter(x => x.stato !== "ok").length || ""] : null,
+    todo.length || has("todo") ? ["todo", "To-Do", todo.filter(t => t.stato !== "fatto").length] : null].filter(Boolean);
   if (!TABS.some(t => t[0] === S.stab)) S.stab = "overview";
   const faceColor = p => `var(${COLS[(+p.slice(1)) % COLS.length]})`;
 
@@ -140,7 +143,7 @@ function vScheda() {
     <div class="col">
       <div class="facts">
         <div><div class="lbl">Cliente</div><div class="v">${esc(org(c.cliente_org_id))}${c.agenzia_org_id ? ` <span class="muted">via ${esc(org(c.agenzia_org_id))}</span>` : ""}</div></div>
-        <div><div class="lbl">Date</div><div class="v mono">${fd(c.data_inizio)}${c.data_fine !== c.data_inizio ? " – " + fd(c.data_fine) : ""}</div></div>
+        <div><div class="lbl">Date</div><div class="v mono">${fd(c.data_inizio)}${c.data_fine !== c.data_inizio ? " – " + fd(c.data_fine) : ""}${c.ora_inizio ? ` · ${c.ora_inizio}–${c.ora_fine}` : ""}</div></div>
         <div><div class="lbl">Location</div><div class="v">${c.location_id ? esc(LOC[c.location_id].nome) : "da definire"}</div></div>
         <div><div class="lbl">Pax</div><div class="v mono">${c.pax ?? "—"}</div></div>
         ${(() => { const r = c.referente_contatto_id && D.CONTATTI.find(x => x.contatto_id === c.referente_contatto_id); return r ? `<div><div class="lbl">Referente</div><div class="v">${esc(r.nome + " " + r.cognome)} <span class="muted small">${esc(r.email || "")}</span></div></div>` : ""; })()}
@@ -180,7 +183,7 @@ function vScheda() {
       ${trasp.length ? `<div class="phases">${trasp.map(f => { const who = O.filter(o => o.fase === f).map(o => nome(o.persona)); return `<div class="ph ph-${f.tipo}"><div class="ph-t"><b>${esc(faseNome(f))}</b><span class="small muted">${esc(f.luogo)}${who.length ? " · " + esc(who.join(", ")) : ""}</span></div><div class="mono small">${fd(f.dal)} · ${hh(f.dal)}–${hh(f.al)}</div><span class="mono small muted">${durH(f.dal, f.al)} h</span></div>`; }).join("")}</div>` : `<p class="muted small">Nessun trasporto.</p>`}
       ${D.PIANO[cid] ? `<p style="margin:8px 0 0"><button class="linkbtn" data-stab="persone">Modifica nel piano</button></p>` : ""}</section></div></div>`;
 
-  const ordini = `<section class="panel"><h2>Ordini <span class="muted">${ord.length}</span></h2>
+  const ordini = !ord.length ? `<div class="empty">Nessun ordine.</div>` : `<section class="panel"><h2>Ordini <span class="muted">${ord.length}</span></h2>
     <div class="tbl-wrap"><table><thead><tr><th>Fornitore</th><th>Cosa</th><th>Avanzamento</th>${vedeNumeri() ? `<th class="num">Importo</th>` : ""}</tr></thead><tbody>
     ${ord.map(o => { const i = ORD_STATI.indexOf(o.stato); return `<tr><td>${esc(org(o.fornitore_org_id))}</td><td>${esc(o.descrizione)}<div class="small muted">consegna ${fd(o.consegna_prevista)} · ${esc(nome(o.responsabile_persona_id))}</div></td>
       <td style="min-width:150px">${pill(o.stato, i >= 3 ? "p-ok" : i <= 1 ? "p-warn" : "p-acc")}<div class="steps">${ORD_STATI.slice(1).map((_, k) => `<i class="${k < i ? "on" : ""}"></i>`).join("")}</div></td>
@@ -188,14 +191,15 @@ function vScheda() {
 
   const file = vDrive(c, files);
 
-  const sicurezza = `<section class="panel"><h2>Sicurezza <span class="muted">${sic.length}</span></h2>
+  const sicurezza = !sic.length ? `<div class="empty">Nessun documento di sicurezza.</div>` : `<section class="panel"><h2>Sicurezza <span class="muted">${sic.length}</span></h2>
     <div class="tbl-wrap"><table><tbody>${sic.map(x => `<tr><td>${esc(x.tipo)}${!x.commessa_id ? ` <span class="small muted">location</span>` : ""}</td><td class="mono small">${fd(x.scadenza)}</td><td>${pill(x.stato, x.stato === "ok" ? "p-ok" : x.stato === "mancante" ? "p-crit" : "p-warn")}</td></tr>`).join("")}</tbody></table></div></section>`;
 
-  const todoTab = `<section class="panel"><h2>To-Do <span class="muted">${todo.length}</span></h2>${todo.map(t => todoRow(t, true)).join("")}</section>`;
+  const todoTab = !todo.length ? `<div class="empty">Nessun to-do.</div>` : `<section class="panel"><h2>To-Do <span class="muted">${todo.length}</span></h2>${todo.map(t => todoRow(t, true)).join("")}</section>`;
 
   const body = { overview, prev: () => pv ? vPrev() : `<div class="empty">${pvEditor() ? `<button class="btn" data-pvcreate="${cid}">Crea preventivo</button>` : "Nessun preventivo."}</div>`,
     persone: () => `${vPiano(c)}<section class="panel" style="margin-top:12px"><h2>Calendario <span class="muted">${O.length}</span></h2>${gantt(c)}</section>`,
-    materiale, ordini, file, sicurezza, todo: todoTab }[S.stab];
+    materiale, ordini, file, sicurezza, todo: todoTab,
+    produzione: `<div class="empty">Nessuna voce di produzione.</div>`, viaggi: `<div class="empty">Nessun volo, transfer o hotel.</div>` }[S.stab];
 
   return `
   <button class="back" data-nav="progetti">‹ Progetti</button>
@@ -221,7 +225,7 @@ function vDrive(c, files) {
   const ICON = { "application/vnd.google-apps.document": "DOC", "application/vnd.google-apps.spreadsheet": "XLS", "application/pdf": "PDF", "image/png": "IMG", "image/jpeg": "IMG" };
   const open = S.fileOpen;
   return `<section class="panel"><h2>Drive <span class="muted">${own.length} file</span></h2>
-    <div class="crumbs"><button class="crumb" data-dir="">${esc(codice(c))} · ${esc(c.titolo_evento)}</button>${crumbs.map((x, i) => `<span class="muted">/</span><button class="crumb" data-dir="${esc(crumbs.slice(0, i + 1).join("/"))}">${esc(x)}</button>`).join("")}</div>
+    <div class="crumbs"><button class="crumb" data-dir="">${c.drive_cartella ? esc(c.drive_cartella.split(" / ").pop()) : `${esc(codice(c))} · ${esc(c.titolo_evento)}`}</button>${crumbs.map((x, i) => `<span class="muted">/</span><button class="crumb" data-dir="${esc(crumbs.slice(0, i + 1).join("/"))}">${esc(x)}</button>`).join("")}</div>
     <div class="drive">
       ${sub.map(d => `<button class="drow" data-dir="${esc(d)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>${esc(d.split("/").pop())}</span><span class="muted small">${count(d) || ""}</span></button>`).join("")}
       ${here.map(f => `<div class="drow file ${open === f.file_id ? "open" : ""}"><button class="dfile" data-file="${f.file_id}"><span class="ftype">${ICON[f.mime_type] || "FILE"}</span><span>${esc(f.nome)}</span><span class="muted small">v${f.versione} · ${fd(f.modificato_il)}</span></button>
@@ -453,7 +457,7 @@ const ALERT_REGOLE = [{ giorni: 30, k: "warn", t: "avviso" }, { giorni: 10, k: "
 const DRIVE_SUB = ["01_BRIEF E COMMERCIALE", "02_ECONOMICO", "03_FORNITORI", "04_PRODUZIONE", "05_LOGISTICA", "06_CREATIVITÀ", "07_CLIENTE", "08_POST EVENTO"];
 
 function pianoDefault(c) {
-  return { ev_inizio: "09:00", ev_fine: "18:00", all_giorni: 1, all_inizio: "08:00", all_fine: "20:00", prove_ore: 2, smo_ore: 5,
+  return { ev_inizio: c.ora_inizio || "09:00", ev_fine: c.ora_fine || "18:00", all_giorni: 1, all_inizio: "08:00", all_fine: "20:00", prove_ore: 2, smo_ore: 5,
     mag: "MAG-C", viaggio_min: VIAGGIO[c.location_id] ?? 60, carico: "giorno prima", carico_ore: 4, scarico: "mattina dopo", scarico_ore: 4 };
 }
 function generaFasi(c, P) {
@@ -719,12 +723,26 @@ function vPlanning(pers) {
 }
 
 /* ── nuova commessa ── */
+const NC_PASSI = ["Commessa", "Schede", "Documenti"];
+const SCHEDE_FISSE = [["overview", "Overview"], ["prev", "Preventivo"], ["persone", "Persone"]];
+const SCHEDE_OPZ = [["materiale", "Materiale e trasporti", "Serve materiale dal magazzino da portare in location?"],
+  ["produzione", "Produzione", "C'è una produzione: allestimenti, scenografie, tecnica?"],
+  ["viaggi", "Trasporti e voli", "Ci sono voli, transfer o hotel per partecipanti e staff?"],
+  ["ordini", "Ordini", "Ci sono ordini o noleggi da fornitori?"],
+  ["sicurezza", "Sicurezza", "Servono documenti di sicurezza (DUVRI, POS, piano di emergenza)?"],
+  ["todo", "To-Do", "Il lavoro si segue con i to-do di ClickUp?"]];
 function ncDefault() {
-  return { titolo: "", capofila: PER[S.user]?.azienda === "Nakama" ? "Nakama" : "Chedo", cliente: "", cliente_nuovo: "", agenzia: "", ref_nome: "", ref_email: "", ref_cell: "",
+  return { step: 1, titolo: "", capofila: PER[S.user]?.azienda === "Nakama" ? "Nakama" : "Chedo", cliente: "", cliente_nuovo: "", agenzia: "", ref_nome: "", ref_email: "", ref_cell: "",
     location: "", loc_nome: "", loc_indirizzo: "", sales: "P07", pm: ruoli(S.user).includes("PM") ? S.user : "P04", backup: "", lead: "", lead_tipo: "rebate", lead_pct: 5, catering: "",
-    dal: "2027-02-18", al: "2027-02-18", pax: 150, ...pianoDefault({}) };
+    dal: "2027-02-18", al: "2027-02-18", ora_inizio: "09:00", ora_fine: "18:00", pax: 150, schede: {}, doc_modo: "carica", docs: [], cartella: "" };
 }
-function ncCommessa(n) { return { commessa_id: "NEW", codice_prospect: "P26-0xx", data_inizio: n.dal, data_fine: n.al < n.dal ? n.dal : n.al, location_id: n.location && n.location !== "nuova" ? n.location : "", location_nome: n.loc_nome }; }
+const ncCliente = n => n.cliente && n.cliente !== "nuovo" ? org(n.cliente) : (n.cliente_nuovo.trim() || "Nuovo cliente");
+/* cartelle già presenti su Drive nella cartella del cliente (demo) */
+function cartelleCliente(n) {
+  if (!n.cliente || n.cliente === "nuovo") return [];
+  const usate = D.COMMESSE.filter(c => c.cliente_org_id === n.cliente).map(c => ({ nome: `${codice(c)} · ${c.titolo_evento}`, collegata: codice(c) }));
+  return [...usate, { nome: `${n.dal.slice(0, 4)} · Richiesta ${org(n.cliente)}` }, { nome: "Materiale ricevuto dal cliente" }];
+}
 function vNuova() {
   const n = S.nc || (S.nc = ncDefault());
   const sel = (k, opts, ph) => `<select id="nc-${k}" data-nc="${k}">${ph != null ? `<option value="">${ph}</option>` : ""}${opts.map(([v, t]) => `<option value="${v}" ${n[k] === v ? "selected" : ""}>${esc(t)}</option>`).join("")}</select>`;
@@ -732,50 +750,73 @@ function vNuova() {
   const F = (k, label, html) => `<div class="field"><label class="lbl" for="nc-${k}">${label}</label>${html}</div>`;
   const pers = r => D.PERSONE.filter(p => ruoli(p.persona_id).some(x => r.includes(x))).map(p => [p.persona_id, `${p.nome} ${p.cognome} · ${p.azienda}`]);
   const ORGS = f => D.ORGANIZZAZIONI.filter(f).map(o => [o.org_id, o.nome_breve]);
-  let prev = []; try { prev = generaFasi(ncCommessa(n), n); } catch (e) {}
-  const ag = n.agenzia ? D.CONTATTI.find(x => x.org_id === n.agenzia && x.principale === "sì") : null;
+  const passi = `<ol class="wiz">${NC_PASSI.map((t, i) => { const k = i + 1, st = k < n.step ? "done" : k === n.step ? "cur" : "";
+    return `<li class="${st}">${k < n.step ? `<button type="button" data-ncstep="${k}"><span class="wn">✓</span>${t}</button>` : `<span ${st === "cur" ? 'aria-current="step"' : ""}><span class="wn">${k}</span>${t}</span>`}</li>`; }).join("")}</ol>`;
+  const piede = `<div class="actions wiz-foot">${n.step > 1 ? `<button class="btn ghost" type="button" data-ncstep="${n.step - 1}">‹ Indietro</button>` : ""}
+    <button class="btn ghost" type="button" data-nav="progetti">Annulla</button>
+    <button class="btn" type="submit">${n.step < 3 ? "Avanti ›" : "Crea commessa"}</button></div>`;
+  let body = "";
+  if (n.step === 1) body = `<div class="nc-grid">
+    <section class="panel"><h2>Commessa</h2><div class="form">
+      ${F("titolo", "Nome commessa", inp("titolo", "text", 'required placeholder="es. Vela Pharma · Convention 2027"'))}
+      <div class="row">${F("capofila", "Azienda capofila", sel("capofila", [["Chedo", "Chedo"], ["Nakama", "Nakama"]]))}${F("pax", "Pax previsti", inp("pax", "number", 'min="0"'))}</div>
+      <div class="row">${F("cliente", "Cliente", sel("cliente", [...ORGS(o => o.e_cliente === "sì"), ["nuovo", "+ nuovo cliente"]], "Scegli…"))}
+        ${n.cliente === "nuovo" ? F("cliente_nuovo", "Nome nuovo cliente", inp("cliente_nuovo")) : F("agenzia", "Agenzia (terza parte)", sel("agenzia", ORGS(o => o.e_agenzia === "sì"), "Nessuna, cliente diretto"))}</div>
+      ${n.cliente === "nuovo" ? F("agenzia", "Agenzia (terza parte)", sel("agenzia", ORGS(o => o.e_agenzia === "sì"), "Nessuna, cliente diretto")) : ""}
+      <div class="row">${F("ref_nome", "Referente del cliente", inp("ref_nome", "text", 'placeholder="Nome e cognome"'))}${F("ref_email", "Email", inp("ref_email", "email"))}</div>
+      <div class="row">${F("ref_cell", "Cellulare", inp("ref_cell", "tel"))}<div></div></div>
+      <div class="row">${F("location", "Location", sel("location", [...D.LOCATION.map(l => [l.location_id, `${l.nome} · ${l.citta}`]), ["nuova", "+ location non in anagrafica"]], "Da definire"))}
+        ${n.location === "nuova" ? F("loc_nome", "Nome location", inp("loc_nome")) : `<div class="field"><span class="lbl">Indirizzo</span><span class="small" style="padding:7px 0">${n.location ? esc(LOC[n.location].indirizzo + ", " + LOC[n.location].citta) : "—"}</span></div>`}</div>
+      ${n.location === "nuova" ? F("loc_indirizzo", "Indirizzo", inp("loc_indirizzo")) : ""}
+      <div class="row">${F("dal", "Evento dal", `<div class="dt">${inp("dal", "date", "required")}<input type="time" id="nc-ora_inizio" value="${n.ora_inizio}" data-nc="ora_inizio" aria-label="Ora di inizio" required></div>`)}
+        ${F("al", "al", `<div class="dt">${inp("al", "date", `required min="${n.dal}"`)}<input type="time" id="nc-ora_fine" value="${n.ora_fine}" data-nc="ora_fine" aria-label="Ora di fine" required></div>`)}</div>
+    </div></section>
+    <section class="panel"><h2>Persone e partner</h2><div class="form">
+      <div class="row">${F("pm", "PM", sel("pm", pers(["PM"])))}${F("backup", "PM backup", sel("backup", pers(["PM"]).filter(p => p[0] !== n.pm), "Nessuno"))}</div>
+      <div class="row">${F("sales", "Sales", sel("sales", pers(["COM", "DIR"]), "Nessuno"))}${F("catering", "Catering", sel("catering", ORGS(o => o.e_fornitore === "sì" && D.FORNITORI.some(f => f.org_id === o.org_id && /catering/.test(f.categorie)) || o.org_id === "ORG-013"), "Da definire"))}</div>
+      <div class="row">${F("lead", "Lead (chi porta il cliente)", sel("lead", ORGS(o => o.e_partner === "sì"), "Nessuno"))}
+        ${n.lead ? `<div class="row" style="grid-template-columns:1fr 80px">${F("lead_tipo", "Riconoscimento", sel("lead_tipo", [["rebate", "rebate"], ["sconto", "sconto in fattura"]]))}${F("lead_pct", "%", inp("lead_pct", "number", 'min="0" max="30" step="0.5"'))}</div>` : "<div></div>"}</div>
+    </div></section></div>`;
+  else if (n.step === 2) body = `<section class="panel"><h2>Schede del progetto</h2>
+    <div class="sk-list">
+      ${SCHEDE_FISSE.map(([, t]) => `<div class="sk"><b>${t}</b><span class="sk-q"></span>${pill("sempre presente")}</div>`).join("")}
+      ${SCHEDE_OPZ.map(([k, t, q]) => `<div class="sk"><b>${t}</b><span class="sk-q small muted">${esc(q)}</span>
+        <div class="seg" role="group" aria-label="${esc(t)}"><button type="button" data-ncsk="${k}" data-v="1" aria-pressed="${!!n.schede[k]}">Sì</button><button type="button" data-ncsk="${k}" data-v="0" aria-pressed="${!n.schede[k]}">No</button></div></div>`).join("")}
+    </div></section>`;
+  else {
+    const cart = cartelleCliente(n), radice = `Clienti / ${ncCliente(n)}`;
+    body = `<section class="panel"><h2>Documenti</h2>
+    <div class="seg wide" role="group" aria-label="Documenti"><button type="button" data-ncdoc="carica" aria-pressed="${n.doc_modo === "carica"}">Carica i documenti</button><button type="button" data-ncdoc="collega" aria-pressed="${n.doc_modo === "collega"}">Collega una cartella esistente</button></div>
+    ${n.doc_modo === "carica" ? `
+      <label class="drop" for="nc-files"><input type="file" id="nc-files" multiple data-ncfiles><b>Scegli i file</b><span class="small muted">brief, mail del cliente, planimetrie, preventivi dei fornitori</span></label>
+      ${n.docs.length ? `<div class="drive">${n.docs.map((f, i) => `<div class="drow"><span class="ftype">${esc((f.split(".").pop() || "file").slice(0, 4).toUpperCase())}</span><span>${esc(f)}</span><button type="button" class="linkbtn" data-ncrm="${i}">Togli</button></div>`).join("")}</div>` : ""}
+      <p class="crumbs small"><span class="muted">Cartella su Drive:</span> ${esc(radice)} / <b>P26-0xx · ${esc(n.titolo)}</b></p>`
+    : cart.length ? `<p class="crumbs small"><span class="muted">${esc(radice)} /</span></p><div class="drive">${cart.map(c => `<label class="drow ${c.collegata ? "dis" : ""}"><input type="radio" name="nc-cart" value="${esc(c.nome)}" data-nccart ${n.cartella === c.nome ? "checked" : ""} ${c.collegata ? "disabled" : ""}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>${esc(c.nome)}</span>${c.collegata ? pill("già collegata") : ""}</label>`).join("")}</div>`
+    : `<div class="empty">${n.cliente === "nuovo" ? "Cliente nuovo: su Drive non ha ancora una cartella." : "Scegli il cliente al passo 1."}</div>`}
+    </section>`;
+  }
   return `<button class="back" data-nav="progetti">‹ Tutti i progetti</button>
   <div class="view-head"><div><h1>Nuova commessa</h1></div></div>
-  <form id="ncform" class="nc-grid">
-    <div class="col">
-      <section class="panel"><h2>Commessa</h2><div class="form">
-        ${F("titolo", "Nome commessa", inp("titolo", "text", 'required placeholder="es. Vela Pharma · Convention 2027"'))}
-        <div class="row">${F("capofila", "Azienda capofila", sel("capofila", [["Chedo", "Chedo"], ["Nakama", "Nakama"]]))}${F("pax", "Pax previsti", inp("pax", "number", 'min="0"'))}</div>
-        <div class="row">${F("cliente", "Cliente", sel("cliente", [...ORGS(o => o.e_cliente === "sì"), ["nuovo", "+ nuovo cliente"]], "Scegli…"))}
-          ${n.cliente === "nuovo" ? F("cliente_nuovo", "Nome nuovo cliente", inp("cliente_nuovo")) : F("agenzia", "Agenzia (terza parte)", sel("agenzia", ORGS(o => o.e_agenzia === "sì"), "Nessuna, cliente diretto"))}</div>
-        ${n.cliente === "nuovo" ? F("agenzia", "Agenzia (terza parte)", sel("agenzia", ORGS(o => o.e_agenzia === "sì"), "Nessuna, cliente diretto")) : ""}
-        <div class="row">${F("ref_nome", "Referente del cliente", inp("ref_nome", "text", 'placeholder="Nome e cognome"'))}${F("ref_email", "Email", inp("ref_email", "email"))}</div>
-        <div class="row">${F("ref_cell", "Cellulare", inp("ref_cell", "tel"))}<div></div></div>
-        <div class="row">${F("location", "Location", sel("location", [...D.LOCATION.map(l => [l.location_id, `${l.nome} · ${l.citta}`]), ["nuova", "+ location non in anagrafica"]], "Da definire"))}
-          ${n.location === "nuova" ? F("loc_nome", "Nome location", inp("loc_nome")) : `<div class="field"><span class="lbl">Indirizzo</span><span class="small" style="padding:7px 0">${n.location ? esc(LOC[n.location].indirizzo + ", " + LOC[n.location].citta) : "—"}</span></div>`}</div>
-        ${n.location === "nuova" ? F("loc_indirizzo", "Indirizzo", inp("loc_indirizzo")) : ""}
-        <div class="row">${F("dal", "Evento dal", inp("dal", "date"))}${F("al", "al", inp("al", "date"))}</div>
-      </div></section>
-      <section class="panel"><h2>Persone e partner</h2><div class="form">
-        <div class="row">${F("pm", "PM", sel("pm", pers(["PM"])))}${F("backup", "PM backup", sel("backup", pers(["PM"]).filter(p => p[0] !== n.pm), "Nessuno"))}</div>
-        <div class="row">${F("sales", "Sales", sel("sales", pers(["COM", "DIR"]), "Nessuno"))}${F("catering", "Catering", sel("catering", ORGS(o => o.e_fornitore === "sì" && D.FORNITORI.some(f => f.org_id === o.org_id && /catering/.test(f.categorie)) || o.org_id === "ORG-013"), "Da definire"))}</div>
-        <div class="row">${F("lead", "Lead (chi porta il cliente)", sel("lead", ORGS(o => o.e_partner === "sì"), "Nessuno"))}
-          ${n.lead ? `<div class="row" style="grid-template-columns:1fr 80px">${F("lead_tipo", "Riconoscimento", sel("lead_tipo", [["rebate", "rebate"], ["sconto", "sconto in fattura"]]))}${F("lead_pct", "%", inp("lead_pct", "number", 'min="0" max="30" step="0.5"'))}</div>` : "<div></div>"}</div>
-      </div></section>
-    </div>
-    <div class="col">
-      <section class="panel"><h2>Piano di lavoro</h2><div class="form">
-        <div class="row">${F("ev_inizio", "Evento: inizio", inp("ev_inizio", "time"))}${F("ev_fine", "fine", inp("ev_fine", "time"))}</div>
-        <div class="row">${F("all_giorni", "Giorni di allestimento", inp("all_giorni", "number", 'min="0" max="5"'))}${F("prove_ore", "Prove: ore prima dell'inizio", inp("prove_ore", "number", 'min="0" step="0.5"'))}</div>
-        <div class="row">${F("mag", "Magazzino di partenza", sel("mag", D.MAGAZZINI.map(m => [m.magazzino_id, m.nome])))}${F("viaggio_min", "Viaggio fino in location (min)", inp("viaggio_min", "number", 'min="0" step="5"'))}</div>
-        <div class="row">${F("smo_ore", "Smontaggio (ore)", inp("smo_ore", "number", 'min="0" step="0.5"'))}${F("carico", "Carico", sel("carico", [["giorno prima", "il giorno prima"], ["stesso giorno", "lo stesso giorno"]]))}</div>
-      </div>
-      <h3 style="margin:12px 0 6px" class="lbl">Fasi generate</h3>
-      <div class="phases mini">${prev.map(f => `<div class="ph ph-${f.tipo}"><div class="ph-t"><b>${esc(faseNome(f))}</b></div><div class="mono small">${fd(f.dal)} · ${hh(f.dal)}–${hh(f.al)}</div><span class="mono small muted">${durH(f.dal, f.al)} h</span></div>`).join("")}</div>
-      </section>
-      <section class="panel"><div class="actions" style="margin-top:0"><button class="btn" type="submit">Crea commessa</button><button class="btn ghost" type="button" data-nav="progetti">Annulla</button></div>
-      </section>
-    </div>
-  </form>`;
+  ${passi}
+  <form id="ncform" class="${n.step > 1 ? "wiz-narrow" : ""}" novalidate>${body}${piede}</form>`;
+}
+function ncAvanti() {
+  const n = S.nc;
+  if (n.step === 1) {
+    if (!n.titolo.trim()) { toast("Scrivi il nome della commessa"); document.getElementById("nc-titolo")?.focus(); return; }
+    if (n.cliente === "nuovo" && !n.cliente_nuovo.trim()) { toast("Scrivi il nome del nuovo cliente"); return; }
+    if (n.al === n.dal && n.ora_fine <= n.ora_inizio) { toast("L'evento finisce prima di iniziare"); return; }
+  }
+  if (n.step === 3) {
+    if (n.doc_modo === "collega" && !n.cartella) { toast("Scegli la cartella da collegare"); return; }
+    creaCommessa(); return;
+  }
+  n.step++; render(); window.scrollTo(0, 0);
 }
 function nextProspect() { const m = D.COMMESSE.reduce((x, c) => Math.max(x, +(c.codice_prospect || "").slice(4) || 0), 0); return "P26-" + String(m + 1).padStart(3, "0"); }
 function creaCommessa() {
-  const n = S.nc; if (!n.titolo.trim()) { toast("Scrivi il nome della commessa"); return; }
+  const n = S.nc;
   const cid = "CM-" + String(D.COMMESSE.length + 1).padStart(4, "0"), cod = nextProspect();
   let cli = n.cliente;
   if (cli === "nuovo" || !cli) { cli = "ORG-" + String(D.ORGANIZZAZIONI.length + 1).padStart(3, "0"); D.ORGANIZZAZIONI.push({ org_id: cli, nome_breve: n.cliente_nuovo || "Cliente da definire", ragione_sociale: n.cliente_nuovo, e_cliente: "sì", e_agenzia: "no", e_partner: "no", e_fornitore: "no" }); ORG[cli] = D.ORGANIZZAZIONI.at(-1); }
@@ -783,14 +824,19 @@ function creaCommessa() {
   if (loc === "nuova") { loc = "LOC-" + String(D.LOCATION.length + 1).padStart(2, "0"); D.LOCATION.push({ location_id: loc, nome: n.loc_nome || "Nuova location", citta: "", indirizzo: n.loc_indirizzo }); LOC[loc] = D.LOCATION.at(-1); }
   let ref = "";
   if (n.ref_nome) { ref = "CT-" + String(D.CONTATTI.length + 1).padStart(2, "0"); const [nm, ...cg] = n.ref_nome.split(" "); D.CONTATTI.push({ contatto_id: ref, org_id: cli, nome: nm, cognome: cg.join(" "), email: n.ref_email, telefono: n.ref_cell, principale: "sì" }); }
+  const schede = SCHEDE_OPZ.map(s => s[0]).filter(k => n.schede[k]);
+  const cartella = n.doc_modo === "collega" ? n.cartella : `${cod} · ${n.titolo.trim()}`;
   const c = { commessa_id: cid, codice_prospect: cod, codice_definitivo: "", stato: "prospect", titolo_evento: n.titolo.trim(), cliente_org_id: cli, committente_org_id: n.agenzia || cli, agenzia_org_id: n.agenzia,
-    azienda_capofila: n.capofila, data_inizio: n.dal, data_fine: n.al < n.dal ? n.dal : n.al, location_id: loc, pax: +n.pax || null, pm_persona_id: n.pm, backup_persona_id: n.backup,
+    azienda_capofila: n.capofila, data_inizio: n.dal, data_fine: n.al < n.dal ? n.dal : n.al, ora_inizio: n.ora_inizio, ora_fine: n.ora_fine, location_id: loc, pax: +n.pax || null, pm_persona_id: n.pm, backup_persona_id: n.backup,
     sales_persona_id: n.sales, referente_contatto_id: ref, catering_org_id: n.catering, lead_org_id: n.lead, lead_tipo: n.lead_tipo, lead_pct: n.lead ? +n.lead_pct : null,
-    modulo_produzione: n.capofila === "Chedo" ? "sì" : "no", modulo_logistica: "sì", modulo_creativita: "no", data_richiesta: TODAY, drive_creata: true };
+    schede, modulo_produzione: schede.includes("produzione") ? "sì" : "no", modulo_logistica: schede.includes("materiale") || schede.includes("viaggi") ? "sì" : "no", modulo_creativita: "no",
+    data_richiesta: TODAY, drive_cartella: `Clienti / ${org(cli)} / ${cartella}` };
   D.COMMESSE.push(c); COM[cid] = c;
-  const P = {}; Object.keys(pianoDefault({})).forEach(k => P[k] = n[k]); setPiano(cid, P);
-  S.nc = null; S.comm = cid; S.view = "scheda"; S.stab = "persone"; OCC = null; render(); window.scrollTo(0, 0);
-  toast(`${cod} creata · cartella Drive con ${DRIVE_SUB.length} sottocartelle`);
+  n.docs.forEach((f, i) => D.FILE.push({ file_id: `F-${cid}-${i + 1}`, commessa_id: cid, location_id: "", cartella: "01_BRIEF E COMMERCIALE", nome: f, tipo_documento: "", versione: 1, mime_type: /\.pdf$/i.test(f) ? "application/pdf" : "", modificato_il: TODAY + " " + new Date().toTimeString().slice(0, 5), stato_indice: "letto" }));
+  const letti = n.doc_modo === "collega" ? `i file della cartella ${n.cartella}` : n.docs.length ? `${n.docs.length} ${n.docs.length > 1 ? "documenti" : "documento"}` : "";
+  if (letti) RIS[cid] = { oggetto_id: cid, generato_il: TODAY, testo: `${c.titolo_evento} per ${org(cli)}${n.agenzia ? " via " + org(n.agenzia) : ""}, ${fd(c.data_inizio)}${c.data_fine !== c.data_inizio ? "–" + fd(c.data_fine) : ""} dalle ${n.ora_inizio} alle ${n.ora_fine}${loc ? " a " + LOC[loc].nome : ""}${c.pax ? ", " + c.pax + " pax" : ""}. PM ${nome(n.pm)}. Riassunto generato leggendo ${letti} (demo).` };
+  S.nc = null; S.comm = cid; S.view = "scheda"; S.stab = "overview"; S.dir = ""; render(); window.scrollTo(0, 0);
+  toast(n.doc_modo === "collega" ? `${cod} creata · collegata a ${n.cartella}` : `${cod} creata · cartella Drive con ${DRIVE_SUB.length} sottocartelle${n.docs.length ? `, ${n.docs.length} documenti caricati` : ""}`);
 }
 function fabbDaPreventivo(cid) {
   const pv = pvOf(cid); if (!pv) return 0; let k = 0;
@@ -926,10 +972,14 @@ const addRow = (r, label) => { const pv = curPV(); const ex = pv.righe.find(x =>
 const evDays = () => { const c = COM[S.comm]; return giorni(c.data_inizio, c.data_fine); };
 
 document.addEventListener("click", e => {
-  const t = e.target.closest("[data-nav],[data-open],[data-filtro],[data-tmine],[data-tstato],[data-conferma],[data-confall],[data-mtab],[data-pvcreate],[data-pvopen],[data-src],[data-addinv],[data-addloc],[data-addlis],[data-addgra],[data-rm],[data-ropz],[data-ralt],[data-pvact],[data-calnav],[data-calgo],[data-stab],[data-reqtoggle],[data-confsel],[data-magev],[data-art],[data-artclose],[data-dir],[data-file],[data-sez],[data-genpiano],[data-slconf],[data-slopz],[data-sloff],[data-sladd],[data-fbrm],[data-fbprev],[data-ctab],[data-wk],[data-wkgo],[data-mese],[data-mesego],[data-calpp]");
+  const t = e.target.closest("[data-nav],[data-open],[data-filtro],[data-tmine],[data-tstato],[data-conferma],[data-confall],[data-mtab],[data-pvcreate],[data-pvopen],[data-src],[data-addinv],[data-addloc],[data-addlis],[data-addgra],[data-rm],[data-ropz],[data-ralt],[data-pvact],[data-calnav],[data-calgo],[data-stab],[data-reqtoggle],[data-confsel],[data-magev],[data-art],[data-artclose],[data-dir],[data-file],[data-sez],[data-genpiano],[data-slconf],[data-slopz],[data-sloff],[data-sladd],[data-fbrm],[data-fbprev],[data-ctab],[data-wk],[data-wkgo],[data-mese],[data-mesego],[data-calpp],[data-ncstep],[data-ncsk],[data-ncdoc],[data-ncrm]");
   if (!t) return;
   const d = t.dataset;
   if (d.nav) { if (d.nav === "nuova") S.nc = null; S.view = d.nav; render(); window.scrollTo(0, 0); }
+  else if (d.ncstep) { S.nc.step = +d.ncstep; render(); window.scrollTo(0, 0); }
+  else if (d.ncsk) { S.nc.schede[d.ncsk] = d.v === "1"; render(); }
+  else if (d.ncdoc) { S.nc.doc_modo = d.ncdoc; render(); }
+  else if (d.ncrm) { S.nc.docs.splice(+d.ncrm, 1); render(); }
   else if (d.genpiano) { setPiano(d.genpiano, {}); render(); toast("Piano generato dalle date dell'evento"); }
   else if (d.slconf || d.slopz) { const f = D.FABB.find(x => x.id === (d.slconf || d.slopz)), sl = f.slots[+d.i]; sl.st = d.slconf ? "conf" : "opz"; render();
     toast(d.slconf ? `${nome(sl.p)} confermato: evento creato nel suo Google Calendar` : `${nome(sl.p)} riportato a opzione`); }
@@ -996,7 +1046,7 @@ document.getElementById("modal").addEventListener("click", e => { if (e.target.i
 document.addEventListener("keydown", e => { if (e.key === "Escape" && S.art) { S.art = null; render(); } });
 document.addEventListener("click", e => { const sm = e.target.closest("summary[data-pvtool]"); if (sm) { e.preventDefault(); S.pvTool = S.pvTool === sm.dataset.pvtool ? null : sm.dataset.pvtool; render(); } });
 document.addEventListener("submit", e => {
-  if (e.target.id === "ncform") { e.preventDefault(); creaCommessa(); return; }
+  if (e.target.id === "ncform") { e.preventDefault(); ncAvanti(); return; }
   if (e.target.id === "fbform") { e.preventDefault(); const cid = e.target.dataset.cid, r = document.getElementById("fb-ruolo").value.trim(), q = Math.max(1, Math.min(20, +document.getElementById("fb-q").value || 1));
     const fasi = [...e.target.querySelectorAll('input[name="fbf"]:checked')].map(x => x.value); if (!r || !fasi.length) { toast("Scrivi il ruolo e scegli almeno una fase"); return; }
     fabb(cid, r, fasi, Array.from({ length: q }, () => null)); render(); toast(`Aggiunto: ${r} × ${q}`); return; }
@@ -1028,10 +1078,11 @@ document.addEventListener("change", e => {
   else if (d.calp) { S.cal.p = t.value; render(); }
   else if (d.ore) { D.ORE[d.ore] = t.value === "" ? undefined : +t.value; if (t.value === "") delete D.ORE[d.ore]; render(); }
   else if (d.nc) { const n = S.nc; n[d.nc] = t.type === "number" ? +t.value : t.value;
-    if (d.nc === "location" && LOC[t.value]) n.viaggio_min = VIAGGIO[t.value] ?? 60;
     if (d.nc === "cliente" && t.value && t.value !== "nuovo") { const r = D.CONTATTI.find(x => x.org_id === t.value && x.principale === "sì"); if (r) { n.ref_nome = r.nome + " " + r.cognome; n.ref_email = r.email; n.ref_cell = r.telefono || ""; } }
     if (d.nc === "dal" && n.al < n.dal) n.al = n.dal;
     render(); document.getElementById("nc-" + d.nc)?.focus(); }
+  else if (t.hasAttribute("data-ncfiles")) { S.nc.docs.push(...[...t.files].map(f => f.name).filter(f => !S.nc.docs.includes(f))); render(); }
+  else if (t.hasAttribute("data-nccart")) { S.nc.cartella = t.value; render(); }
   else if (d.reqsel) { t.checked ? S.mag.sel.add(d.reqsel) : S.mag.sel.delete(d.reqsel); render(); }
   else if (d.cal) { S.mag[d.cal] = d.cal === "solo" ? t.checked : t.value; render(); }
 });
