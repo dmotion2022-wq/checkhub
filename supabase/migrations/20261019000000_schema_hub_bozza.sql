@@ -213,15 +213,23 @@ create table organizzazioni (
   e_partner boolean,
   e_fornitore boolean,
   e_gestore_location boolean,
+  tipo_partner text[],
   stato text check (stato in ('prospect', 'attivo', 'inattivo')),
+  forma_giuridica text check (forma_giuridica in ('società di capitali / ente commerciale', 'società di persone', 'ditta individuale', 'persona fisica', 'ente non commerciale', 'pubblica amministrazione', 'altro soggetto')),
   partita_iva text,
   codice_fiscale text,
   codice_sdi text,
   pec text,
   indirizzo text,
+  cap text,
   citta text,
+  provincia text,
+  regione text,
   paese text,
+  telefono text,
+  email text,
   sito text,
+  orari text,
   condizioni_pagamento text,
   commerciale_persona_id text,
   fonte text,
@@ -236,6 +244,11 @@ comment on table organizzazioni is '02 · CRM · Clienti, agenzie, partner e lea
 comment on column organizzazioni.e_cliente is 'cliente finale';
 comment on column organizzazioni.e_agenzia is 'agenzia che commissiona e paga';
 comment on column organizzazioni.e_partner is 'partner o lead che segnala e prende un rebate';
+comment on column organizzazioni.tipo_partner is 'se è un partner: che partner è (MASTER CHEDO · partner)';
+comment on column organizzazioni.forma_giuridica is 'entità giuridica, serve per la fattura';
+comment on column organizzazioni.telefono is 'centralino';
+comment on column organizzazioni.email is 'indirizzo generale';
+comment on column organizzazioni.orari is 'orari di apertura o di risposta';
 comment on column organizzazioni.commerciale_persona_id is 'chi segue il rapporto';
 comment on column organizzazioni.fonte is 'come è arrivato';
 comment on column organizzazioni.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
@@ -287,11 +300,13 @@ alter table agenzie_clienti enable row level security;
 create table accordi_partner (
   accordo_id text primary key,
   partner_org_id text,
+  direzione text check (direzione in ('al partner', 'a noi')),
   tipo_rebate text check (tipo_rebate in ('percentuale', 'importo fisso')),
   percentuale numeric(7,3),
   importo_fisso numeric(12,2),
   base_calcolo text check (base_calcolo in ('imponibile', 'margine')),
   ambito text,
+  esclusioni text,
   valido_dal date,
   valido_al date,
   note text,
@@ -303,7 +318,9 @@ create table accordi_partner (
 );
 comment on table accordi_partner is '02 · CRM · Clienti, agenzie, partner e lead con rebate, contatti, contratti quadro';
 comment on column accordi_partner.partner_org_id is 'il partner o lead';
+comment on column accordi_partner.direzione is 'sconto che riconosciamo al partner, oppure sconto che il partner fa a noi';
 comment on column accordi_partner.ambito is 'es. generale, oppure grafiche/tessuti/spazi';
+comment on column accordi_partner.esclusioni is 'voci escluse dallo sconto: personale, vitto, alloggio…';
 comment on column accordi_partner.rev is 'revisione: +1 a ogni modifica. Chi aggiorna manda la rev che ha letto; se nel frattempo un altro dispositivo ha modificato il record, l''aggiornamento non passa';
 alter table accordi_partner enable row level security;
 
